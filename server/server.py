@@ -17,18 +17,15 @@ class ConnHandler(SocketServer.BaseRequestHandler):
     self.data = self.request.recv(1024).strip()
     logging.debug("DATA: %s - %s" % (self.client_address[0], self.data) )
 
-    # asjson = "[{name: 'Nome', starttime: 'StartTime', endtime: 'EndTime'}]"
-    # asjson = '[{"name": "Nome", "starttime": "StarTTTIME", "endtime": "EndTme"}]'
-    # print "JSon example", asjson
-    print "Data", self.data
-    print "DATA U", unicode( self.data )
     tmp = Rec(asjson=self.data)
-    print "Creato REC: ", tmp
+
 
     if tmp.err():
       respmsg = "Data ERROR"
     else:
       respmsg = "OK"
+    
+    logging.debug("Created REC %s" % tmp)
 
     self.db.add( tmp ) 
     self.db.printall()
