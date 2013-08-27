@@ -1,9 +1,18 @@
-  import logging
+import logging
 logging.basicConfig(level=logging.DEBUG)
+import sys
 
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+try:
+  from sqlalchemy import create_engine, Column, Integer, String
+  from sqlalchemy.orm import sessionmaker
+  from sqlalchemy.ext.declarative import declarative_base
+except:
+  sys.exit("No SQLAlchemy.")
+
+
+import json
+
+import yaml
 
 """
 This class describe a single Record (Rec() class) and the 
@@ -15,6 +24,9 @@ Base = declarative_base()
 """ ************ 
 RECORD ABSTRACTION
 ************ """
+QUEUE = 0 
+RUN   = 2
+DONE  = 4
 
 class Rec(Base):
   
@@ -23,15 +35,41 @@ class Rec(Base):
   name = Column(String)
   endtime = Column(String)
   starttime = Column(String)
-  
-  def __init__(self, name="", starttime="", endtime=""):
-    self.name = name
-    self.starttime = starttime
-    self.endtime = endtime
-    self.id = None
+  state   = Column(Integer)
+
+  def __init__(self, name="", starttime="", endtime="",asjson=""):
+    self.error = 0 
+
+    if len(asjson) == 0:
+      self.name = name
+      self.starttime = starttime
+      self.endtime = endtime
+    else:
+      try:
+        # dec = json.loads( unicode(asjson) )
+        dec = yaml.load( asjson )
+      except:
+        self.error = 0
+      self.name = dec[0]['name'] 
+      self.starttime = dec[0]['starttime']
+      self.endtime = dec[0]['endtime']
+    # self.id = None
+    self.state = QUEUE
+    print "DECC" , dec
+    print "NAME", self.name
+    print "Sstart", self.starttime
+    print "END", self.endtime
+      
+  def err(self): return self.error
+
+  def setrun(self):
+    self.state = RUN
+
+  def setdone(self):
+    self.state = DONE
 
   def __repr__(self):
-    return "<Rec('%s','%s','%s', '%s')>" % (self.id, self.name, self.starttime, self.endtime)
+    return "<Rec('%s','%s','%s', '%s', '%s')>" % (self.id, self.name, self.starttime, self.endtime, self.state)
     
 
 """ ************ 
@@ -69,7 +107,7 @@ class RecDB:
     
     logging.info("Looking for %s" % recfilter)
     
-    self.session.query( Rec ).filter( Rec.name=name ).first()
+    # self.session.query( Rec ).filter( Rec.name=name ).first()
     
     for row in records:
       print "Found:", row

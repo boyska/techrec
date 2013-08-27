@@ -1,0 +1,2 @@
+echo '[{"name": "Nome", "starttime": "ORA", "endtime": "EndTme"}]' | nc 127.0.0.1 9999
+
