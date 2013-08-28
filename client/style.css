@@ -1,0 +1,111 @@
+body {
+	background-color:#F6F7BD;
+}
+
+h1 {
+    font-size:2em;
+}
+
+a{
+    color:#A60000;
+    text-decoration:none;
+}
+
+
+/* Contenitore pagina */
+#pagecontainer {
+    max-width:50%;
+    margin:auto;
+    background-color:#F6F7BD;
+    background-image: url("7915.png") ;
+    background-repeat:no-repeat;
+    background-attachment:fixed;
+    background-position: 2% 35%;
+    background-size: 100px;
+    min-height: 700px; 
+}
+
+/* Rec Container */
+.recarea {
+    border-bottom:1px solid black;
+    padding:10px;
+    margin:10px;
+    text-align:center;
+    min-height:150px;
+    width:99%;
+    float:left;
+}
+
+.recarea input {
+    margin:0px 10px 0px 10px;
+}
+
+.buttonarea {
+    padding:10px;
+    margin:10px;
+    text-align:center;
+    min-height:150px;
+    width:45%;
+    float:left;
+}
+
+.recbutton {
+    width:100px;
+    height:100px;
+    font-size:1.2em;
+    font-weight:bold;
+}
+
+#addnewrecarea {
+    width:100%;
+    text-align:right;
+    font-weight:bold;
+}
+
+#addnewrecarea a{
+    color:#A60000;
+}
+
+/* FOOTER  */
+#footer {
+	text-align: center;
+	width:70%;
+	margin:auto;
+	margin-top:10px;
+	font-size:0.7em;
+	font-weight:bold;
+    color:#A60000;
+    border-top: 1px dashed #A60000;
+}
+
+#newrec .logarea {
+    min-width:200px;
+    min-height:100px;
+    border:1px solid black;
+}
+
+#newrec, #formsearchrec {
+    border-bottom:2px dashed #A60000;
+    margin:10px;
+    padding:20px;
+    width:70%;
+    text-align:center;
+}
+
+#newrec input[type=button], 
+#formsearchrec input[type=button] { 
+    width:100px;
+    height:100px;
+}
+
+#newrec input[type=text], 
+#formsearchrec input[type=text] { 
+    float:left; 
+    width:225px;
+}
+
+
+.logarea { 
+    width:45%;
+    float:left;
+}

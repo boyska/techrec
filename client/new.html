@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<title> TechREC </title>
+
+<script src="jquery-1.9.1.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="style.css">
+
+<script>
+var txt_start       = "Inizia";
+var txt_stop        = "Ferma";
+var txt_download    = "Scarica";
+
+var almostone       = false;
+var noplusbotton    = true;
+var maxrec          = 0 ;
+
+var rec_name_default = "";
+
+/** Perform Ajax async loading **/
+function async_load( destdiv, uri, postdata) {
+    postdata = postdata || '';
+    
+    console.log("[ASYNC] " + destdiv + " <- " + uri + " --- DATA "+postdata );
+    
+    $(destdiv).html("\<div class=\"imageloader\"\> \<img src=\"ajax-loader.gif\" /\> \</div\>");
+    
+    var request = $.ajax( { url: uri, type:"POST", data: postdata } );
+            
+    request.fail(function(jqXHR) { 
+    
+            console.log("Errore async ajax: " + jqXHR.status)
+            $(".imageloader").remove();
+            $(destdiv).html("error code: " + jqXHR.status );
+        });
+
+    request.done(function( msg ) {     
+            $(".imageloader").remove();
+            $(destdiv).append(msg); 
+        });
+}
+
+
+function rs_button( code ) { return code; }
+function rs_trxarea( code ) { return "recarea-"+code; }
+function rs_trxname( code ) { return code+"_name"; }
+function rs_buttonarea( code ) { return code+"_buttonarea"; }
+function rs_inputstart( code ) { return code+"_startime"; }
+function rs_inputend( code ) { return code+"_endtime"; }
+
+function rs_id(code) { return code; }
+function rs_log(code) { return code + "_log"; }
+
+/** New record **/
+function rec_new( ) {
+
+    console.log("Nuova");
+
+    var recid = "rec-"+maxrec;
+    maxrec += 1;    // increment number of active record
+    
+    console.log("AGGIUNTO AL MAIN CONTAINER");
+    $("#buttonscontainer").append( "<div id=\""+rs_trxarea(recid)+"\" class=\"recarea\"> </div>" );
+    
+    $("#"+rs_trxarea(recid)).append( "<div id=\""+rs_buttonarea(recid)+"\" class=\"buttonarea\"> </div>" );
+
+    // POPULATE BUTTON AREA
+    var str = "\<input type=\"button\" id=\""+rs_button(recid)+ "\" name=\""+rs_button(recid)+"\" ";
+    str = str + " class=\"recbutton\" value=\"Inizia\"  /\>";
+ 
+    $("#"+rs_buttonarea(recid)).html( str );
+    // DELETE BUTTON (NO FIRST ELEMENT)
+    if ( recid > 0 ){
+        $("#"+rs_buttonarea(recid)).append( "\<div class=\"dellink\" \> <a href=\"#\"> cancella</a> \</div\>" );
+    }
+
+    // INSERT AND POPULATE BUTTON AREA
+    $("#"+rs_trxarea(recid)).append( "<div id=\""+rs_log(recid)+"\" class=\"logarea\">Nuova trasmissione </div>" );
+    
+    // BINDING CLICK TO FUNCTION    
+    $("#"+rs_button(recid) ).click(function(){
+        rec_changestate( rs_button(recid) );
+    });
+}
+
+function rec_changestate( eid ) {
+
+    console.log("[CS] change state for "+eid+"");
+    
+    var recbutton = document.getElementById( eid );
+    var trxnameobj =  document.getElementById( rs_trxname(eid) );
+    
+    if (recbutton == null) {
+        alert("Impossibile trovare ID");
+        return;
+    }
+    console.log("[CS] "+eid+" == " +recbutton.value);
+    
+    /*** 
+    
+        Simple FSM - Finite State Machine 
+        
+    ***/
+    
+    
+    if ( recbutton.value.toUpperCase() == txt_start.toUpperCase() ) {
+        /* 
+        In this case, user presses START 
+        */
+        
+        var myDate = new Date();
+        var displayDate = (myDate.getFullYear()+1) + '/' + (myDate.getMonth()+1) + '/' + myDate.getDate();
+        displayDate = displayDate +' '+ myDate.getHours()+':'+myDate.getMinutes()+':'+myDate.getSeconds();
+        
+        var str = "\<input type=\"text\" id=\""+rs_trxname(eid)+"\" placeholder=\"Nome trasmissione\" /\>";
+        str = str + "\<input type=\"hidden\" id=\""+rs_inputstart(eid)+"\" value=\""+displayDate+"\" /\>";
+
+        $("#"+rs_buttonarea(eid)).append( str );
+
+        console.log("[CS] rs_log(eid) " + rs_log(eid) );
+        $("#"+rs_log(eid)).append("<br /\>Inizio: "+displayDate);
+
+        console.log("[CS] change text for "+eid);
+        recbutton.value = txt_stop;
+        
+        console.log("[CS] change color for area "+eid);
+        $("#"+ rs_trxarea(eid) ).css("background-color","red");
+        
+        almostone = true;
+
+    } else if ( recbutton.value.toUpperCase() == txt_stop.toUpperCase() ) {
+        /* 
+            In this case, user presses STOP 
+        */
+
+        console.log("[CS] "+eid+" == " +txt_stop);
+
+        var myDate = new Date();
+        var displayDate = (myDate.getMonth()+1) + '/' + (myDate.getDate()) + '/' + myDate.getFullYear();
+        displayDate = displayDate +' '+ myDate.getHours()+':'+myDate.getMinutes()+':'+myDate.getSeconds();
+        
+        var str = "\<input type=\"hidden\" id=\""+rs_inputend(eid)+"\" value=\""+displayDate+"\" /\>";
+
+        $("#"+rs_trxarea(eid)).append( str );
+        
+        $("#"+rs_log(eid)).append("<br /\>Fine: "+displayDate);
+        
+        recbutton.value = txt_download;
+        $("#"+ rs_trxarea(eid)).css("background-color","green");
+        
+    } else if ( recbutton.value.toUpperCase() == txt_download.toUpperCase() ) {
+
+        /* In this case, user presses DOWNLOAD 
+            Save name and block the record. No operations are (more) allowed.            
+            */
+            
+        console.log("[CS] "+eid+" == " +txt_download);
+        console.log("[CS] GetID"+ eid+ "_name");
+
+        var trxname = trxnameobj.value;
+
+        console.log("[CS] ID = "+eid+"_name ==> "+trxname ) ;
+        console.log("[CS] "+trxname+" != "+rec_name_default);
+        
+        if (trxname == rec_name_default) {
+            trxname = prompt("Inserire il nome della registrazione per salvarla", "");         
+
+            // check if it is empty or null
+            while ( ( $.trim(trxname) == "") || (trxname == null) ) {
+                trxname = prompt("Non posso registrare senza un nome!", "");
+            }
+
+            /* no possible !!! */
+            if ( $.trim(trxname) == "") {
+                alert("Sei riuscito/a a registrare senza dare un nome.. pensi di farla franca '??????"+
+                    "techbl*c contro il lampo negli occhi della protoscimmia");
+            }
+            
+            trxnameobj.setAttribute("value", trxname);
+            
+        }
+        
+        console.log("recarea"+eid);
+        console.log($("#recarea"+eid).innerHTML);
+        $("#recarea"+eid).css("background-color","#ccc");
+        
+        async_load( "#"+rs_log(eid), "techrecapi.php?op=new", {location:"roma", name:"ciccio"});
+        
+    }
+
+    // if there is almost one button and the PLUSBOTTON has previously insered    
+    if (almostone == true && noplusbotton == true) {
+        $("#addnewrecarea").prepend( "<a href=\"#\" id=\"newrecbutton\">+ nuova</a>" );
+        $("#newrecbutton").click(function(){
+            rec_new();
+        });
+        noplusbotton = false;
+    }
+
+}
+
+
+/* GESTIONE CAMBIO DI STATO */
+$(document).ready(function(){
+    rec_new();
+});
+
+
+</script>
+
+
+</head>
+
+<body>
+
+<!-- 
+    QUI ANDREBBE INSERITA UNA LOAD DEI DATI DAL DATABASE PER REDERE 
+    L'INTERFACCIA COERENTE CON LA BASE DI DATI
+--> 
+<div id="pagecontainer">
+    <form action="" method="POST">
+            
+        <h1> techr*c </h1>
+        
+        <h2> <a href="tempo.php"> macchina del tempo</a> </h2>
+        
+        <div id="buttonscontainer"> </div>
+
+        <div id="addnewrecarea"> </div>
+
+    </form>
+    
+</div>
+
+<div id="footer">
+    techbl*c
+</div>
+
+</body>
+</html>
