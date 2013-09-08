@@ -97,14 +97,14 @@ function rec_new( ) {
     
     var formid = rs_formid( recid );
 
-    var str = "<form id=\""+formid+"\" action=\"#\">";
+    var str = "<form id=\""+formid+"\" name=\""+formid+"\" action=\"#\">";
 
     str = str + "<input type=\"button\" name=\""+trx_startbut(recid)+"\" id=\""+trx_startbut(recid)+"\" ";
     str = str + " class=\"recbutton\" value=\"Inizia\" />";
 
     str = str + "<input type=\"button\" name=\""+trx_stopbut(recid)+"\" id=\""+trx_stopbut(recid)+"\" ";
     str = str + " class=\"recbutton\" value=\"Stop\" />";
-
+    // ADD SUBITO TEXTBUTTON
     str = str + "<input type=\"submit\" name=\""+trx_downbut(recid)+"\" id=\""+trx_downbut(recid)+"\" ";
     str = str + " class=\"recbutton\" value=\"Scarica\" />";
 
@@ -122,7 +122,7 @@ function rec_new( ) {
     
     console.log("[rec_new] add form "+ formid );
     
-    $("#"+rs_buttonarea(recid)).append( "\<div class=\"dellink\" \> <a href=\"#\"> cancella</a> \</div\>" );
+    
     $("#"+rs_buttonarea(recid)).append( "\<div class=\"dellink\" \> <a href=\"#\"> cancella</a> \</div\>" );
 
     // INSERT AND POPULATE BUTTON AREA
@@ -140,8 +140,8 @@ function rec_new( ) {
     $("#"+formid).submit(function(event){
       
         event.preventDefault();
-        dataString = $("#"+formid).serialize();
-     
+        dataString = $(this).serialize();
+        alert("Mando:" + dataString);
         var request = $.ajax({
           type: "POST",
 		  cache: false,
@@ -188,13 +188,13 @@ function ChangeState(eid, from, to) {
   var logdiv = trx_logarea( eid );
   
   if ( from == trx_startbut(eid) ) {
-    var str = "<input type=\"text\" id=\""+rs_inputstart(eid)+"\" value=\""+displayDate+"\" />";
+    var str = "<input type=\"text\" id=\""+rs_inputstart(eid)+"\" name=\""+rs_inputstart(eid)+"\" value=\""+displayDate+"\" />";
     $("#"+formid).append( str );
     $("#"+logdiv).append("<br/>Inizio: "+ displayDate);
   }
   
   if ( from == trx_stopbut(eid) ) {
-    var str = "\<input type=\"text\" id=\""+rs_inputend(eid)+"\" value=\""+displayDate+"\" /\>";
+    var str = "\<input type=\"text\" id=\""+rs_inputend(eid)+"\" name=\""+rs_inputend(eid)+"\" value=\""+displayDate+"\" /\>";
     $("#"+formid).append( str );
     $("#"+logdiv).append("<br/>Fine: "+ displayDate);
   }
