@@ -45,14 +45,21 @@ class Rec(Base):
       self.starttime = starttime
       self.endtime = endtime
     else:
-      try:
+      #try:
         # dec = json.loads( unicode(asjson) )
-        dec = yaml.load( asjson )
-      except:
-        self.error = 0
-      self.name = dec[0]['name'] 
-      self.starttime = dec[0]['starttime']
-      self.endtime = dec[0]['endtime']
+      # dec = yaml.load( asjson )
+      dec = json.dumps( asjson ) 
+      # except:
+      #  self.error = 0
+      print("dec %s %s" % (dec,type(dec))) 
+      print("asjson %s %s" % (asjson,type(asjson))) 
+      
+      # self.name = dec[0]['name'] 
+      # self.starttime = dec[0]['starttime']
+      # self.endtime = dec[0]['endtime']
+      self.name = asjson[0]['name'] 
+      self.starttime = asjson[0]['starttime']
+      self.endtime = asjson[0]['endtime']
     # self.id = None
     self.state = QUEUE
     print "DECC" , dec
@@ -94,18 +101,18 @@ class RecDB:
 
   # print all records
   def printall(self):
-    logging.info("DB")
+    print("DB")
     allrecords = self.session.query(Rec).all()
 
     for record in allrecords:
-      logging.info("R: %s " % record)
+      print("R: %s" % record)
       
   def execsql(self,sql):
     records = self.conn.execute( sql )
     
   def search(self, name="", starttime="", endtime=""):
     
-    logging.info("Looking for %s" % recfilter)
+    logging.debug("Looking for %s" % recfilter)
     
     # self.session.query( Rec ).filter( Rec.name=name ).first()
     

@@ -13,6 +13,8 @@ var txt_start       = "Inizia";
 var txt_stop        = "Ferma";
 var txt_download    = "Scarica";
 
+var srvaddr         = "http://127.0.1.1:8000/";
+
 var almostone       = false;
 var noplusbotton    = true;
 var maxrec          = 0 ;
@@ -23,23 +25,47 @@ var rec_name_default = "";
 function async_load( destdiv, uri, postdata) {
     postdata = postdata || '';
     
-    console.log("[ASYNC] " + destdiv + " <- " + uri + " --- DATA "+postdata );
+    console.log("[ASYNC] " + destdiv + " <- " + uri)
+    console.log( postdata );
     
-    $(destdiv).html("\<div class=\"imageloader\"\> \<img src=\"ajax-loader.gif\" /\> \</div\>");
-    
-    var request = $.ajax( { url: uri, type:"POST", data: postdata } );
-            
-    request.fail(function(jqXHR) { 
-    
-            console.log("Errore async ajax: " + jqXHR.status)
+    $(destdiv).html("\<div class=\"imageloader\"\> \<img src=\"img/ajax-loader.gif\" /\> \</div\>");
+    console.log("Tolta uri" + uri + "NOW -> http://127.0.1.1:8000/sampleJSON");
+    var request = $.ajax( { url: "http://127.0.1.1:8000/sampleJSON", 
+                        type:"POST", 
+                        data: postdata,
+                        dataType: 'json',
+                        success :  function( msg ) {     
+                                $(".imageloader").remove();
+                                resmsg = "["+jqXHR.status+"]";
+                                alert("Ma ci sei ?");
+                                $(destdiv).append( resmsg ); 
+                                },
+                        error: function(xhr) { 
+                                var errmsg = "";
+                                console.log("Errore async ajax: " + xhr.status );
+                                switch( xhr.status )
+                                {
+                                    case 0: errmsg="[0] Network Problem."; break;
+                                    case 404: errmsg="[404] Requested page not found."; break;
+                                    case 500: errmsg="[500] Internal Server Error."; break;
+                                    default: errmsg="[ErrCode: "+xhr.status+"] Error uncatched!"; break;
+                                }
+                                console.log("ErrMSG" + errmsg);
+                                $(".imageloader").remove();
+                                //$(destdiv).html("Err: "+ errmsg);
+                                alert("Err: "+ errmsg);
+                            }                     
+                        } 
+      ).always(function( jqXHR ) {     
             $(".imageloader").remove();
-            $(destdiv).html("error code: " + jqXHR.status );
-        });
-
-    request.done(function( msg ) {     
-            $(".imageloader").remove();
-            $(destdiv).append(msg); 
-        });
+            resmsg = "ALSWAST["+jqXHR.status+"]";
+            $(destdiv).append( resmsg ); 
+        }
+      ).complete(
+         function (jqXHR, msgstatus) {
+            alert("Comlpete " +jqXHR + " - " + msgstatus);         
+         }
+      );
 }
 
 
@@ -49,6 +75,7 @@ function rs_trxname( code ) { return code+"_name"; }
 function rs_buttonarea( code ) { return code+"_buttonarea"; }
 function rs_inputstart( code ) { return code+"_startime"; }
 function rs_inputend( code ) { return code+"_endtime"; }
+function rs_formid(code) { return "form-"+code; }
 
 function rs_id(code) { return code; }
 function rs_log(code) { return code + "_log"; }
@@ -67,9 +94,15 @@ function rec_new( ) {
     $("#"+rs_trxarea(recid)).append( "<div id=\""+rs_buttonarea(recid)+"\" class=\"buttonarea\"> </div>" );
 
     // POPULATE BUTTON AREA
-    var str = "\<input type=\"button\" id=\""+rs_button(recid)+ "\" name=\""+rs_button(recid)+"\" ";
+    // var str = "\<input type=\"image\" src=\"img/button.jpg\"id=\""+rs_button(recid)+ "\" name=\""+rs_button(recid)+"\" ";
+    var formid = rs_formid( recid );
+
+    var str = "<form id=\""+formid+"\">";
+    str = str + "\<input type=\"submit\" name=\""+rs_button(recid)+"\"  id=\""+rs_button(recid)+"\" ";
     str = str + " class=\"recbutton\" value=\"Inizia\"  /\>";
- 
+    str = str + "</form>";
+    $("#"+formid).attr("action","#") .attr("method","post") //set the form attributes
+    
     $("#"+rs_buttonarea(recid)).html( str );
     // DELETE BUTTON (NO FIRST ELEMENT)
     if ( recid > 0 ){
@@ -80,9 +113,22 @@ function rec_new( ) {
     $("#"+rs_trxarea(recid)).append( "<div id=\""+rs_log(recid)+"\" class=\"logarea\">Nuova trasmissione </div>" );
     
     // BINDING CLICK TO FUNCTION    
-    $("#"+rs_button(recid) ).click(function(){
+    // $("#"+rs_button(recid) ).click(function(){
+    $("#"+rs_button(recid) ).submit(function(){
+    
         rec_changestate( rs_button(recid) );
     });
+}
+
+function download( eid ){
+    alert("DEntro download");
+    var trxnameobj =  document.getElementById( rs_trxname(eid) );
+    var trxname = trxnameobj.value;
+    var starttime = $("#"+rs_inputstart(eid)).val();	
+    var endtime = $("#"+rs_inputstart(eid)).val();
+    var jsondata = {"name":'"'+trxname+'"', "starttime":'"'+ starttime +'"', "endtime":'"'+ endtime +'"'};
+    async_load( destdiv, srvaddr, jsondata);
+    alert("FINE download");
 }
 
 function rec_changestate( eid ) {
@@ -104,6 +150,8 @@ function rec_changestate( eid ) {
         
     ***/
     
+    console.log("RECBUTTON value :"+recbutton.value);
+    //console.log("TXT " + txt_star.toUpperCase() );
     
     if ( recbutton.value.toUpperCase() == txt_start.toUpperCase() ) {
         /* 
@@ -117,9 +165,11 @@ function rec_changestate( eid ) {
         var str = "\<input type=\"text\" id=\""+rs_trxname(eid)+"\" placeholder=\"Nome trasmissione\" /\>";
         str = str + "\<input type=\"hidden\" id=\""+rs_inputstart(eid)+"\" value=\""+displayDate+"\" /\>";
 
-        $("#"+rs_buttonarea(eid)).append( str );
+        //$("#"+rs_buttonarea(eid)).append( str );
+        var formid = rs_formid( eid );
+        $("#"+formid).append(str)
 
-        console.log("[CS] rs_log(eid) " + rs_log(eid) );
+        console.log("[CS] Update log div (" + rs_log(eid) +")");
         $("#"+rs_log(eid)).append("<br /\>Inizio: "+displayDate);
 
         console.log("[CS] change text for "+eid);
@@ -147,8 +197,40 @@ function rec_changestate( eid ) {
         
         $("#"+rs_log(eid)).append("<br /\>Fine: "+displayDate);
         
+        recbutton.type = "submit";
         recbutton.value = txt_download;
+        $("#"+eid).click(function(e){
+                e.preventDefault();
+                
+                dataString = $("#JqAjaxForm").serialize();
+     
+                $.ajax({
+                    type: "POST",
+                    url: "http://127.0.1.1:8000/sampleJSON",
+                    data: {"value":"value"},
+                    dataType: "json",
+                    success: function(data) {
+                        alert("QUI"+ data);
+                        
+                    },
+                    error: function (x) {
+	                   alert("error" + x.status);
+                    }
+               });         
+        });
+          
+
+
         $("#"+ rs_trxarea(eid)).css("background-color","green");
+        console.log("EID" + eid);
+        $("#"+ rs_trxarea(eid)).append( "<a href=\"#\" id=\"but-down-"+eid+"\" onclick=\"Javascript:download("+eid+");\") >SCARICA LINK</a>" );
+        /*$("#but-down-"+eid).click(function(){
+            var trxname = trxnameobj.value;
+            var starttime = $("#"+rs_inputstart(eid)).val();	
+            var endtime = $("#"+rs_inputstart(eid)).val();
+            var jsondata = {"name":'"'+trxname+'"', "starttime":'"'+ starttime +'"', "endtime":'"'+ endtime +'"'};
+            async_load( destdiv, srvaddr, jsondata);
+        });*/
         
     } else if ( recbutton.value.toUpperCase() == txt_download.toUpperCase() ) {
 
@@ -160,7 +242,9 @@ function rec_changestate( eid ) {
         console.log("[CS] GetID"+ eid+ "_name");
 
         var trxname = trxnameobj.value;
-
+        var starttime = $("#"+rs_inputstart(eid)).val();	
+        var endtime = $("#"+rs_inputstart(eid)).val();
+        
         console.log("[CS] ID = "+eid+"_name ==> "+trxname ) ;
         console.log("[CS] "+trxname+" != "+rec_name_default);
         
@@ -182,11 +266,16 @@ function rec_changestate( eid ) {
             
         }
         
-        console.log("recarea"+eid);
-        console.log($("#recarea"+eid).innerHTML);
-        $("#recarea"+eid).css("background-color","#ccc");
+        console.log( "Recarea "+rs_trxarea(eid) +" ->  " + $("#"+rs_trxarea(eid)).innerHTML );
+        $("#"+rs_trxarea(eid)).css("background-color","#ccc");
+
+        // TODO: fare i controlli su starttime, endtime
         
-        async_load( "#"+rs_log(eid), "techrecapi.php?op=new", {location:"roma", name:"ciccio"});
+        var jsondata = {"name":'"'+trxname+'"', "starttime":'"'+ starttime +'"', "endtime":'"'+ endtime +'"'};
+        
+        destdiv = "#"+rs_log(eid)
+        console.log( destdiv +" <- " + srvaddr + "\n" + jsondata );
+        async_load( destdiv, srvaddr, jsondata);
         
     }
 
@@ -201,12 +290,10 @@ function rec_changestate( eid ) {
 
 }
 
-
 /* GESTIONE CAMBIO DI STATO */
 $(document).ready(function(){
     rec_new();
 });
-
 
 </script>
 
@@ -220,7 +307,7 @@ $(document).ready(function(){
     L'INTERFACCIA COERENTE CON LA BASE DI DATI
 --> 
 <div id="pagecontainer">
-    <form action="" method="POST">
+    <!-- <form action="#" method="POST"> -->
             
         <h1> techr*c </h1>
         
@@ -230,7 +317,7 @@ $(document).ready(function(){
 
         <div id="addnewrecarea"> </div>
 
-    </form>
+    <!-- </form>-->
     
 </div>
 

@@ -32,7 +32,7 @@ var rec_name_default = "";
 /** 
   * Perform Ajax async loading 
   **/
-function async_load( destdiv, uri, postdata) {
+function DELETEasync_load( destdiv, uri, postdata) {
     postdata = postdata || '';
     
     console.log("[ASYNC] " + destdiv + " <- " + uri)
@@ -40,7 +40,7 @@ function async_load( destdiv, uri, postdata) {
     
     $(destdiv).html("\<div class=\"imageloader\"\> \<img src=\"img/ajax-loader.gif\" /\> \</div\>");
     console.log("Tolta uri" + uri + "NOW -> http://127.0.1.1:8000/sampleJSON");
-    var request = $.ajax( { url: "http://127.0.0.1:8000/sampleJSON", 
+    var request = $.ajax( { url: "http://127.0.0.1:8000/create", 
                         type:"GET", 
                         //data: postdata,
                         //dataType: 'json',
@@ -144,9 +144,8 @@ function rec_new( ) {
      
         var request = $.ajax({
           type: "POST",
-					cache: false,
-          // url: "http://127.0.0.1:8000/sampleJSON",
-          url: "http://127.0.0.1:8000/sampleJSON",
+		  cache: false,
+          url: "http://127.0.0.1:8000/create",
           data: dataString,
           dataType: "json"
           });
@@ -161,12 +160,12 @@ function rec_new( ) {
 						console.log("req"+ request);
 					} );
 
-				request.fail(function (jqXHR, textStatus, errorThrown){
-        		// log the error to the console
-		        console.error("The following error occured: "+
-		            jqXHR.status, +"-"+ textStatus + "-" + errorThrown
-    			    );
-    });
+		request.fail(function (jqXHR, textStatus, errorThrown){
+
+	       console.error("The following error occured: "+
+		      jqXHR.status, +"-"+ textStatus + "-" + errorThrown
+    	   );
+        });
 
     });
     
