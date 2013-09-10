@@ -1,9 +1,9 @@
 import logging
 logging.basicConfig(level=logging.DEBUG)
 import sys
-
+import datetime
 try:
-  from sqlalchemy import create_engine, Column, Integer, String
+  from sqlalchemy import create_engine, Column, Integer, String, DateTime
   from sqlalchemy.orm import sessionmaker
   from sqlalchemy.ext.declarative import declarative_base
 except:
@@ -30,54 +30,61 @@ DONE  = 4
 
 class Rec(Base):
   
-  __tablename__ = 'rec'
-  id = Column(Integer, primary_key=True)
-  name = Column(String)
-  endtime = Column(String)
-  starttime = Column(String)
-  state   = Column(Integer)
+    __tablename__ = 'rec'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    # TODO: timestamp
+    endtime = Column(DateTime)
+    starttime = Column(DateTime)
+    state   = Column(Integer)
 
-  def __init__(self, name="", starttime="", endtime="",asjson=""):
-    self.error = 0 
-
-    if len(asjson) == 0:
-      self.name = name
-      self.starttime = starttime
-      self.endtime = endtime
-    else:
-      #try:
-        # dec = json.loads( unicode(asjson) )
-      # dec = yaml.load( asjson )
-      dec = json.dumps( asjson ) 
-      # except:
-      #  self.error = 0
-      print("dec %s %s" % (dec,type(dec))) 
-      print("asjson %s %s" % (asjson,type(asjson))) 
-      
-      # self.name = dec[0]['name'] 
-      # self.starttime = dec[0]['starttime']
-      # self.endtime = dec[0]['endtime']
-      self.name = asjson[0]['name'] 
-      self.starttime = asjson[0]['starttime']
-      self.endtime = asjson[0]['endtime']
-    # self.id = None
-    self.state = QUEUE
-    print "DECC" , dec
-    print "NAME", self.name
-    print "Sstart", self.starttime
-    print "END", self.endtime
-      
-  def err(self): return self.error
-
-  def setrun(self):
-    self.state = RUN
-
-  def setdone(self):
-    self.state = DONE
-
-  def __repr__(self):
-    return "<Rec('%s','%s','%s', '%s', '%s')>" % (self.id, self.name, self.starttime, self.endtime, self.state)
+    def __init__(self, name="", starttime=None, endtime=None, asjson=""):
+        self.error = 0 
+        self.values = {"name":"","starttime":"", "endtime":""}
     
+        if len(asjson) == 0:
+          self.name = name
+          self.starttime = starttime
+          self.endtime = endtime
+        else:
+            #try:
+                # dec = json.loads( unicode(asjson) )
+            # dec = yaml.load( asjson )
+            dec = json.dumps( asjson ) 
+            # except:
+            #  self.error = 0
+            print("dec %s %s" % (dec,type(dec))) 
+            print("asjson %s %s" % (asjson,type(asjson))) 
+          
+            self.name = asjson[0]['name'] 
+            self.starttime = asjson[0]['starttime']
+            selfendtime = asjson[0]['endtime']
+    
+        self.state = QUEUE
+        logging.info("New REC: ", self.values)
+
+    # launch the job for processing files
+    def start(self):
+        # calcola file da splittare
+        pass
+                  
+    def getvalue(self,val=None):
+        if val != None:
+            if self.values.has_key(val):
+                return self.values[val]
+        return self.values
+      
+    def err(self): 
+        return self.error
+
+    def set_run(self):
+        self.state = RUN
+
+    def set_done(self):
+        self.state = DONE
+
+    def __repr__(self):
+        return "<Rec('%s','%s','%s', '%s', '%s')>" % (self.id, self.name, self.starttime, self.endtime, self.state)
 
 """ ************ 
 RecDB
@@ -101,20 +108,38 @@ class RecDB:
 
   # print all records
   def printall(self):
-    print("DB")
+    print(" ---- DB ---- ")
     allrecords = self.session.query(Rec).all()
 
-    for record in allrecords:
-      print("R: %s" % record)
+    print [ "R: %s" % record for record in allrecords ]
+      
       
   def execsql(self,sql):
     records = self.conn.execute( sql )
     
   def search(self, name="", starttime="", endtime=""):
     
-    logging.debug("Looking for %s" % recfilter)
+    logging.debug("Looking for %s - %s - %s" % (name, starttime, endtime) )
     
-    # self.session.query( Rec ).filter( Rec.name=name ).first()
+    ret = self.session.query(Rec).filter_by(name='Mimmo1').all()
+    print "[SEARCH] RET (",type(ret),")" , ret
+    for row in ret:
+      print "[SEARCH] Found:", row
+
+if __name__ == "__main__":
+    # text
+    db = RecDB()
+      
+    _mytime = datetime.datetime(2014,05,24,15,16,17)
+    a = Rec(name="Mimmo1", starttime=_mytime, endtime=None)
     
-    for row in records:
-      print "Found:", row
+    db.add( a )
+    
+    raw_input()
+    
+    db.printall()
+
+    raw_input()
+    # db.search( Rec(name="Mimmo1") )
+    db.search( name="Mimmo1" )
+    
