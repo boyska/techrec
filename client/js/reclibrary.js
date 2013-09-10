@@ -107,7 +107,11 @@ function rec_new( ) {
     // ADD SUBITO TEXTBUTTON
     str = str + "<input type=\"submit\" name=\""+trx_downbut(recid)+"\" id=\""+trx_downbut(recid)+"\" ";
     str = str + " class=\"recbutton\" value=\"Scarica\" />";
-
+    
+    str = str + "<input type=\"text\" id=\""+rs_inputstart(recid)+"\" name=\""+rs_inputstart(recid)+"\"/>";
+    
+    str = str + "<input type=\"text\" id=\""+rs_inputend(recid)+"\" name=\""+rs_inputend(recid)+"\"/> ";
+    
     str = str + "</form>";
 
     
@@ -188,15 +192,15 @@ function ChangeState(eid, from, to) {
   var logdiv = trx_logarea( eid );
   
   if ( from == trx_startbut(eid) ) {
-    var str = "<input type=\"text\" id=\""+rs_inputstart(eid)+"\" name=\""+rs_inputstart(eid)+"\" value=\""+displayDate+"\" />";
-    $("#"+formid).append( str );
     $("#"+logdiv).append("<br/>Inizio: "+ displayDate);
+    $("#"+rs_inputstart(eid)).val( displayDate);
+    console.log("set "+rs_inputstart(eid)+ " to "+ displayDate )
   }
   
   if ( from == trx_stopbut(eid) ) {
-    var str = "\<input type=\"text\" id=\""+rs_inputend(eid)+"\" name=\""+rs_inputend(eid)+"\" value=\""+displayDate+"\" /\>";
-    $("#"+formid).append( str );
     $("#"+logdiv).append("<br/>Fine: "+ displayDate);
+    $("#"+rs_inputend(eid)).val( displayDate);
+    console.log("set "+rs_inputend(eid)+ " to "+ displayDate )
   }
 
 } // End function ChangeState
