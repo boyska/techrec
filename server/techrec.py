@@ -33,13 +33,6 @@ DONE  = 4
 
 PAGESIZE = 10
 
-# Job in thread
-class RecJob():
-    def __init__(self, rec):
-        print "Estraggo %s Start:%s, End:%s" % (rec.name, rec.starttime, rec.endtime)
-    
-    def run(self):
-        pass
     
 class Rec(Base):
   
@@ -163,14 +156,89 @@ def printall( queryres ):
     for record in queryres:
         print "R: %s" % record
 
+
+# Job in thread
+class RecJob():
+    def __init__(self, rec):
+        print "Estraggo %s Start:%s, End:%s" % (rec.name, rec.starttime, rec.endtime)
+        self.fdir = "/rec/ror/"
+        self.fnameformat = "ror-%Y-%m-%d-%H-00-00.mp3"
+        self.name = rec.name
+        self.starttime = rec.starttime
+        self.endtime = rec.endtime
+        
+    def run(self):
+
+        if type(self.starttime) != type(datetime.datetime.now()):
+            logging.info("Starttime format error")
+            return
+        
+        if type(self.endtime) != type(datetime.datetime.now()):
+            logging.info("Endtime format error")
+            return
+            
+        if self.starttime >= self.endtime:
+            logging.info("Starttime > Endtime (%s > %s)" % (self.starttime,self.endtime) )
+            return
+            
+        """print self.starttime
+        print self.starttime + datetime.timedelta(minutes=10)
+        print self.starttime.year
+        print self._truncate(self.starttime)
+        self.starttimetrunc = self._truncate(self.starttime)
+        print self.starttime - self.starttimetrunc
+        print "preleva da file "
+        print "Opt: %s => %s" % ( self.starttime, self.endtime )
+        print self._get_recfile(self.starttime)
+        """
+        start = self.starttime
+        end  = self.endtime
+        app = self.starttime
+        
+        while True:
+            print
+            print "**** From file %s take:" % ( self._get_recfile(start) )
+            nexth = self._truncate(start) + datetime.timedelta(minutes=60)
+             
+            if start > self._truncate(start):
+                print "FROM: %s for %s seconds" % (start - self._truncate(start), nexth - start )
+            
+            if end < self._truncate(nexth):
+                print "FROM: %s for %s seconds" % (0, end - self._truncate(start) )
+            else:
+                print "FROM: %s for 0 to 60." % (self._get_recfile(start))
+            if nexth >= end:
+                print "FINITO"
+                print "Start ", start, " end: ", end
+                break;
+            start = nexth
+            
+    def _truncate(self, mytime):
+        return datetime.datetime(mytime.year,mytime.month,mytime.day,mytime.hour)
+
+    def _get_recfile(self, mytime):
+        return "%s/%s" % (self.fdir,mytime.strftime(self.fnameformat))
+ 
+    def __repr__(self):
+        return "%s: %s (%s) => %s (%s)" % ( self.name, self.starttime, type(self.starttime) ,self.endtime, type(self.endtime))
+            
+        
 """
     TEST
 """
 if __name__ == "__main__":
     db = RecDB()
+    _mytime = datetime.datetime(2014,05,24,15,12,17)
+    _endtime = datetime.datetime(2014,05,24,17,45,17)
+
+    a = Rec(name="Mimmo1", starttime=_mytime, endtime=_endtime)
+    j = RecJob( a )
+    # print (j)
+    j.run()
+    
+    sys.exit("End test job")
       
-    _mytime = datetime.datetime(2014,05,24,15,16,17)
-    a = Rec(name="Mimmo1", starttime=_mytime, endtime=None)
+    # a = Rec(name="Mimmo1", starttime=_mytime, endtime=None)
     print "Aggiunto", db.add( a )
     printall( db.get_all(page_size=5,page=0) )
     
