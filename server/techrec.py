@@ -180,17 +180,7 @@ class RecJob():
         if self.starttime >= self.endtime:
             logging.info("Starttime > Endtime (%s > %s)" % (self.starttime,self.endtime) )
             return
-            
-        """print self.starttime
-        print self.starttime + datetime.timedelta(minutes=10)
-        print self.starttime.year
-        print self._truncate(self.starttime)
-        self.starttimetrunc = self._truncate(self.starttime)
-        print self.starttime - self.starttimetrunc
-        print "preleva da file "
-        print "Opt: %s => %s" % ( self.starttime, self.endtime )
-        print self._get_recfile(self.starttime)
-        """
+
         start = self.starttime
         end  = self.endtime
         app = self.starttime

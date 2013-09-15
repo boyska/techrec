@@ -25,59 +25,14 @@ var srvaddr         = "http://127.0.1.1:8000/";
 
 var almostone       = false;
 var noplusbotton    = true;
-var maxrec          = 0 ;
+var maxrec          = 0 ; // Number of Active Record
 
 var rec_name_default = "";
 
 /** 
   * Perform Ajax async loading 
   **/
-function DELETEasync_load( destdiv, uri, postdata) {
-    postdata = postdata || '';
-    
-    console.log("[ASYNC] " + destdiv + " <- " + uri)
-    console.log( postdata );
-    
-    $(destdiv).html("\<div class=\"imageloader\"\> \<img src=\"img/ajax-loader.gif\" /\> \</div\>");
-    console.log("Tolta uri" + uri + "NOW -> http://127.0.1.1:8000/sampleJSON");
-    var request = $.ajax( { url: "http://127.0.0.1:8000/create", 
-                        type:"GET", 
-                        //data: postdata,
-                        //dataType: 'json',
-                        success :  function( msg ) {     
-                                $(".imageloader").remove();
-                                resmsg = "["+jqXHR.status+"]";
-                                alert("Ma ci sei ?");
-                                $(destdiv).append( resmsg ); 
-                                },
-                        error: function(xhr) { 
-                                var errmsg = "";
-                                console.log("Errore async ajax: " + xhr.status );
-                                switch( xhr.status )
-                                {
-                                    case 0: errmsg="[0] Network Problem."; break;
-                                    case 404: errmsg="[404] Requested page not found."; break;
-                                    case 500: errmsg="[500] Internal Server Error."; break;
-                                    default: errmsg="[ErrCode: "+xhr.status+"] Error uncatched!"; break;
-                                }
-                                console.log("ErrMSG" + errmsg);
-                                $(".imageloader").remove();
-                                //$(destdiv).html("Err: "+ errmsg);
-                                alert("Err: "+ errmsg);
-                            }                     
-                        } 
-      ).always(function( jqXHR ) {     
-            $(".imageloader").remove();
-            resmsg = "ALSWAST["+jqXHR.status+"]";
-            $(destdiv).append( resmsg ); 
-        }
-      ).complete(
-         function (jqXHR, msgstatus) {
-            alert("Comlpete " +jqXHR + " - " + msgstatus);         
-         }
-      );
-      return false;
-}
+
 
     
 /** 
@@ -85,7 +40,7 @@ function DELETEasync_load( destdiv, uri, postdata) {
   **/
 function rec_new( ) {
     var recid = "rec-"+maxrec;
-    maxrec += 1;  // increment number of active record
+    maxrec += 1;  
     
     console.log("[rec_new] New Rec " + recid);
 
