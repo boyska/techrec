@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+
+<title> TechREC </title>
+
+<link rel="stylesheet" type="text/css" href="css/style.css">
+
+<script src="js/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="js/reclibrary.js"></script>
+
+<script>
+/* 
+TODO:
+prendere lo stato !!! 
+*/
+$(document).ready(function(){
+    $("#searchform").submit( 
+        function () {
+            alert("Submit");
+        });
+    });
+
+</script>
+
+</head>
+
+<body>
+
+<div id="pagecontainer">
+            
+  <h1> techr*c </h1>
+        
+  <h2> <a href="index.html"> Nuova registrazione</a> </h2>
+        
+  <div id="buttonscontainer"> 
+    <form action="#" method="POST" id="searchform">
+        <input type="text" name="search"  />    
+        <input type="text" id="starttime" name="starttime" placeholder="Start: 2014-05-01-44-55-01" />
+        <input type="text" id="endtime" name="endtime" placeholder="End: 2014-05-01-44-55-01" />
+    </form>
+  </div>
+
+  <div id="searchresult"> 
+  
+  </div> 
+
+   
+</div>
+
+<div id="footer">
+  techbl*c
+</div>
+
+</body>
+</html>

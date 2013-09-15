@@ -21,7 +21,7 @@ var txt_start       = "Inizia";
 var txt_stop        = "Ferma";
 var txt_download    = "Scarica";
 
-var srvaddr         = "http://127.0.1.1:8000/";
+var srvaddr         = "http://127.0.0.1:8000/";
 
 var almostone       = false;
 var noplusbotton    = true;
@@ -101,6 +101,8 @@ function rec_new( ) {
         event.preventDefault();
         dataString = $(this).serialize();
         alert("Mando:" + dataString);
+        RecAjax("/create", dataString);
+        /* 
         var request = $.ajax({
           type: "POST",
 		  cache: false,
@@ -125,10 +127,35 @@ function rec_new( ) {
 		      jqXHR.status, +"-"+ textStatus + "-" + errorThrown
     	   );
         });
-
+    */
     });
     
     console.log("Form readyReady");
+}
+
+function RecAjax(apipath, dataString) {
+    
+    var request = $.ajax({
+        type: "POST",
+		cache: false,
+        url:  srvaddr + "/" + apipath,
+        data: dataString,
+        dataType: "json"
+    });
+        
+    request.done( function(data) { 	
+        $.each(data, function(key, val) {
+            console.log("Key " + key + " > VAL " + val );
+    		$("#"+trx_logarea( recid )).append( "Key " + key + " > VAL " + val + "<br>"  );
+        });
+        console.log("Req OK: "+ data); 
+        console.log("req"+ request);
+    } );
+
+    request.fail(function (jqXHR, textStatus, errorThrown){
+        console.error("The following error occured: "+
+            jqXHR.status, +"-"+ textStatus + "-" + errorThrown );
+    });
 }
 
 function ChangeState(eid, from, to) {
