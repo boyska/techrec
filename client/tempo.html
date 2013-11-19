@@ -16,10 +16,40 @@ TODO:
 prendere lo stato !!! 
 */
 $(document).ready(function(){
+
     $("#searchform").submit( 
-        function () {
-            alert("Submit");
+        function (event) {
+            event.preventDefault();
+            dataString = $(this).serialize();
+            var request = RecAjax("search", dataString, "dads");
+
+          	$("#searchresult").html(" ");
+            request.done( function(data) {
+                console.log("Ricevuto data", data); 	
+                $.each(data, function(key, val) {
+                    console.log("Extract " + key );
+										
+										var divstring = "<div class=\"searchresult\" id=\""+ rs_trxarea(key) +"\"> </div>";
+
+                    $("#searchresult").append( divstring );
+                    // var str = newformstr( key ); // new form
+
+										var str = "<div class=\"namevalues\">"+val.name+" - <a href=\"\">Scarica</a></div>"; 
+										str += "<span class=\"timevalues\">["+val.starttime+"  >>> "+val.endtime+"]</span>"
+
+										$("#"+rs_trxarea(key)).html(str);
+
+                    // $("#"+rs_trxname(key)).val( val.name );
+                    // $("#"+rs_inputstart(key)).val( val.starttime );
+                    // $("#"+rs_inputend(key)).val( val.endtime );
+
+                    if (val.state == "CODA") {}
+                    if (val.state == "RUN") {}
+                    if (val.state == "DONE") {}
+                });
+            });
         });
+    $("#searchform").submit();   
     });
 
 </script>
@@ -36,9 +66,10 @@ $(document).ready(function(){
         
   <div id="buttonscontainer"> 
     <form action="#" method="POST" id="searchform">
-        <input type="text" name="search"  />    
-        <input type="text" id="starttime" name="starttime" placeholder="Start: 2014-05-01-44-55-01" />
-        <input type="text" id="endtime" name="endtime" placeholder="End: 2014-05-01-44-55-01" />
+        <input type="text" id="name"        name="name"         placeholder="name"  />    
+        <input type="text" id="starttime"   name="starttime"    placeholder="Start: 2014-05-01-44-55-01" />
+        <input type="text" id="endtime"     name="endtime"      placeholder="End: 2014-05-01-44-55-01" />
+        <input type="submit" value="Cerca" />
     </form>
   </div>
 

@@ -18,7 +18,7 @@ class RecServer:
     def start(self):
         self._app.run(host=self._host, port=self._port)
 
-    # @hook('after_request')
+    @hook('after_request')
     def enable_cors(self):
         #These lines are needed for avoiding the "Access-Control-Allow-Origin" errors
         response.headers['Access-Control-Allow-Origin'] = '*'
@@ -34,16 +34,15 @@ class RecServer:
         self._app.route('/create', method="POST", callback=self.create)        
         self._app.post('/create', callback=self.create)        
                 
-        self._app.route('/get', method="GET", callback=self.getrec)        
-        self._app.route('/get/', method="GET", callback=self.getrec)        
-        self._app.route('/get/', method="GET", callback=self.getrec)        
-        self._app.route('/get/<recid>', method="GET", callback=self.getrec)        
+        # self._app.route('/get', method="GET", callback=self.getrec)        
+        # self._app.route('/get/', method="GET", callback=self.getrec)        
+        # self._app.route('/get/<recid>', method="GET", callback=self.getrec)        
         
-        self._app.route('/search', method="GET", callback=self.search)        
-        self._app.route('/search/', method="GET", callback=self.search)        
-        self._app.route('/search/<recid>', method="GET", callback=self.search)        
-        self._app.route('/oldsearch/<key>/<value>', method="GET", callback=self.search)        
-        self._app.route('/search/<args:path>', method="GET", callback=self.search)
+        self._app.route('/search', method="POST", callback=self.search)        
+        # self._app.route('/search/', method="POST", callback=self.search)        
+        # self._app.route('/search/<recid>', method="POST", callback=self.search)        
+        # self._app.route('/oldsearch/<key>/<value>', method="POST", callback=self.search)        
+        # self._app.route('/search/<args:path>', method="POST", callback=self.search)
 
         self._app.route('/delete/<recid>', method="GET", callback=self.delete)
         self._app.route('/delete/<recid>/', method="GET", callback=self.delete)
@@ -55,55 +54,78 @@ class RecServer:
     # @route('/create', method=['OPTIONS','POST'])
     def create(self):
         self.enable_cors()
-        print "ALL ITEM", request.POST.allitems()
-
+        req = dict( request.POST.allitems() )
         ret = {}
-        
-        for k,v in request.POST.allitems():
-            print "P", k, v
-            ret[k] = v
-        return ret
-        
-        """
-        a = Rec(name="Mimmo1",starttime="ora",endtime="fine")
-        db.add( a )
-        db.printall()
-        db.search( Rec(name="Mimmo1") )"""
-
-    # @route('/get')
-    # @route('/get/')
-    # @route('/get/<recid>/')
-    def getrec(self, recid=None):
-        if not recid:
-            print "No ID"
+        print "REQ", req
+        if req["starttime-"+req["recid"]] != "":
+            starttime = datetime.datetime.strptime( req["starttime-"+req["recid"]] , "%Y/%m/%d %H:%M:%S")
         else:
-            print "ID %s id" % ( recid )
+            starttime = ""
 
+        if req["endtime-"+req["recid"]] != "":
+            endtime = datetime.datetime.strptime( req["endtime-"+req["recid"]] , "%Y/%m/%d %H:%M:%S")
+        else:
+            endtime = ""
+            
+        self.db.add( Rec(name=req["name-"+req["recid"]], 
+            starttime=starttime,
+            endtime=endtime ) 
+            )
+
+        return { "msg": "Nuova registrazione aggiunta" }
+   
     # @route('/active')
     def getactive(self):
         print "GetActive"
 
-    # @route('/delete/<recid>')
-    # @route('/delete/<recid>/')
+    # @route('/delete/<recid>') # @route('/delete/<recid>/')
     def delete( self, recid = None ):
         if not recid:
             self.rec_err("No recid!")
         self.rec_err("Delete")
         
     def rec_err(self, msg):
-        return { "error": msg,}
+        return { "error": msg }
 
 
-    # @route('/search')
-    # @route('/search/')
-    # @route('/search/<key>/<value>')
+    """
+     @route('/search') # @route('/search/')  # @route('/search/<key>/<value>')
+    """
     def search( self, args=None):
-        if args == None:
-            print "Cerco tutti"
-        print args.split("/")
-        print self.db._search()
-        return self.rec_err("err")
-        
+        self.enable_cors()
+
+        req  = dict( request.POST.allitems() )
+
+        name = req["name"]
+        if req["name"] == "": name = None
+        starttime = req["starttime"]
+        if req["starttime"] == "": name = None
+        endtime = req["endtime"]
+        if req["endtime"] == "": endtime = None
+            
+        values =  self.db._search(name=name, starttime=starttime, endtime=endtime)
+        ret = {}
+        for rec in values:
+            recid = "rec-" + str(rec.id) 
+            
+            ret [recid] = {}
+            ret [recid]["name"] = rec.name
+            ret [recid]["starttime"] = rec.starttime.strftime("%Y-%m-%d-%H-%H-%s")
+            if rec.endtime != None:
+                ret [recid]["endtime"] = rec.endtime.strftime("%Y-%m-%d-%H-%H-%s")
+            else:
+                rec.endtime = ""
+                
+            ret [recid]["state"] =  rec.state
+            
+        # print "RET ", ret 
+        """
+        print "VALUES ", values
+        print type(self.rec_err("sdiaso")), " - " , type(values)
+        print "ERR" , self.rec_err("sdiaso")"""
+        logging.info("Return: %s" % ret);
+        return ret
+                
     # @route('/favicon.ico')
     def favicon(self):
         return static_file('icon.ico', root="./img/", mimetype="image/ico")
@@ -126,5 +148,5 @@ class RecServer:
     TESTs
 """
 if __name__ == "__main__":
-    c = RecServer()
+    c = RecServer(host="0.0.0.0")
     c.start()

@@ -24,13 +24,6 @@ records manager (RecDB() class)
 
 Base = declarative_base()
 
-""" ************ 
-RECORD STATE FLAGS
-************ """
-QUEUE = 0 
-RUN   = 2
-DONE  = 4
-
 PAGESIZE = 10
 
     
@@ -39,9 +32,9 @@ class Rec(Base):
     __tablename__ = 'rec'
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    endtime = Column(DateTime)
-    starttime = Column(DateTime)
-    state   = Column(Integer)
+    starttime = Column(DateTime, nullable = True)
+    endtime = Column(DateTime, nullable = True)
+    state   = Column(String)
 
     def __init__(self, name="", starttime=None, endtime=None, asjson=""):
         self.error = 0 
@@ -65,7 +58,7 @@ class Rec(Base):
             self.starttime = asjson[0]['starttime']
             selfendtime = asjson[0]['endtime']
     
-        self.state = QUEUE
+        self.state = "CODA"
 
 
     # launch the job for processing files
@@ -84,10 +77,10 @@ class Rec(Base):
         return self.error
 
     def set_run(self):
-        self.state = RUN
+        self.state = "RUN"
 
     def set_done(self):
-        self.state = DONE
+        self.state = "DONE"
 
     def __repr__(self):
         return "<Rec('%s','%s','%s', '%s', '%s')>" % (self.id, self.name, self.starttime, self.endtime, self.state)
@@ -131,15 +124,16 @@ class RecDB:
     def commit(self):
         self.session.commit()
 
-    def get_all(self,page=0, page_size=PAGESIZE):
+    def get_all(self, page=0, page_size=PAGESIZE):
         return self._search(page=page, page_size=page_size)
     
-    def _search(self, _id=None, name=None, starttime=None, endtime=None, page=0, page_size=PAGESIZE):
+    def _search(self, _id=None, name=None, starttime=None, endtime=None, state=None, page=0, page_size=PAGESIZE):
         query = self.session.query(Rec)
         if _id:         query = query.filter_by(id=_id)
         if name:        query = query.filter_by(name=name)
         if starttime:   query = query.filter(Rec.starttime>starttime)
         if endtime:     query = query.filter(Rec.endtime<endtime)
+        if state:       query = query.filter(state=state)
         if page_size:   query = query.limit(page_size)
         if page:        query = query.offset(page*page_size)
 

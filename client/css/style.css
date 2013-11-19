@@ -17,7 +17,8 @@ a{
     max-width:50%;
     margin:auto;
     background-color:#F6F7BD;
-    background-image: url("img/7915.png") ;
+		border:1px solid black;
+    background-image: url("../img/7915.png") ;
     background-repeat:no-repeat;
     background-attachment:fixed;
     background-position: 2% 35%;
@@ -56,6 +57,24 @@ a{
     font-weight:bold;
 }
 
+.downloadbutton {
+	max-height:20px;
+	background-color:red;
+}
+
+.searchresult {
+	margin-top:10px;
+	border:2px dashed #ccc;
+	margin:3px;
+	font-size:0.9em;
+	padding:3px;
+}
+.timevalues {
+	font-size:0.9em;
+}
+.namevalues {
+	font-weight:bolder;
+}
 #addnewrecarea {
     width:100%;
     text-align:right;

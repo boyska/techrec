@@ -11,12 +11,15 @@
 <script type="text/javascript" src="js/reclibrary.js"></script>
 
 <script>
-/* 
-TODO:
-prendere lo stato !!! 
-*/
+
 $(document).ready(function(){
+
+    $("#newlink").click( function(){
+        rec_new();
+    });
+    
     rec_new();
+    
 });
 
 </script>
@@ -27,13 +30,16 @@ $(document).ready(function(){
 
 <div id="pagecontainer">
             
-  <h1> techr*c </h1>
+    <h1> techr*c </h1>
         
-  <h2> <a href="tempo.html"> macchina del tempo</a> </h2>
+    <h2> 
+        <a href="#" id="newlink">+ nuova registrazione</a> <br />
+        <a href="tempo.html"> macchina del tempo</a> 
+    </h2>
         
-  <div id="buttonscontainer"> </div>
+    <div id="buttonscontainer"> </div>
 
-  <div id="addnewrecarea"> </div>
+    <div id="addnewrecarea"> </div>
    
 </div>
 
