@@ -2,6 +2,8 @@
     techrec
 ==========================================
 
+BUG and roadmap
+See roadmap for details
 
 --------
  Client
@@ -56,6 +58,5 @@ JSON = {
         'op': 'delete'
         }
 
-BUG
-Da Salva button lo stato non va. Per il resto sembra funzionare.
+
 

@@ -42,26 +42,8 @@ $(document).ready(function(){
 					$("#"+rs_trxarea(key)).html(str);
                     $("#delete-"+val.id).click(function(evt) {
                             evt.preventDefault();
-                            console.log("Delete request for ID "+ val.id);
-                            var dataString = "id="+val.id
-                            var req_del = RecAjax("delete", dataString);
+                            recDelete(val.recid, rs_trxarea(key) );
                             
-                            req_del.done (function(data) {
-                                $.each(data, function(del_key, del_val) {
-                                    console.log("K:V " + del_key +":"+del_val ); 
-                            
-                                    if (del_key == "message") {
-                                        $("#"+rs_trxarea(key)).fadeOut( 500, function() { $(this).remove(); });
-                                        console.log("delete area "+rs_trxarea(key));    
-
-                                    } 
-                                    
-                                    if (del_key == "error") {
-                                        alert("Impossibile cancellare elemento");
-                                    }
-                                    
-                                });
-                            });
                         }
                     ); // End of delete link handler 
                     

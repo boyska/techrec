@@ -129,14 +129,14 @@ function rec_new( )
     // Bind the Delete Links
 	$("#"+rs_dellink(recid)).click(function(){
 		console.log("Remove " + rs_trxarea(recid) + "[ID"+recid+"]");
-		$("#"+rs_trxarea(recid)).remove();
-		alert("Premuto del link. Invio al server ?");
+		 // $("#"+rs_trxarea(recid)).remove();
+		recDelete (recid,rs_trxarea(recid)); 
     });
     
     // FORM SUBMIT: THE REC IS STOPPEND AND MUST BE PROCESSED
     $("#"+formid).submit(function(event){
  		// Immediately, mark the end time (stop action)
-		ChangeState(recid, trx_stopbut(recid) , trx_downbut(recid)); 
+		ChangeState(recid, trx_downbut(recid) , trx_endbut(recid)); 
         
         // Force a Name
 		while (true) {
@@ -180,13 +180,38 @@ function rec_new( )
     console.log("New form has been built.");
 }
 
+/* Delete Record */
+function recDelete ( recid, targetarea ) {
+    var formid = rs_formid( recid );
+    var dataString = "recid="+recid
+
+    console.log("Del rec: "+dataString);
+    var req_del = RecAjax("delete", dataString);
+                            
+    req_del.done (function(data) {
+        $.each(data, function(del_key, del_val) {
+            console.log("K:V " + del_key +":"+del_val ); 
+    
+            if (del_key == "message") {
+                $("#"+targetarea).fadeOut( 200, function() { $(this).remove(); });
+                console.log("delete area "+rs_trxarea(key));    
+
+            } 
+            
+            if (del_key == "error") {
+                alert("Impossibile cancellare elemento:\n" + del_val );
+            }
+            
+        });
+    });
+}
+
 /* New Record */
 function recNew ( recid ) {
     var formid = rs_formid( recid );
     var dataString = $("#"+formid).serialize();
 
     console.log("New rec: "+dataString);
-    
     
     var request = RecAjax("create", dataString);
 
@@ -309,3 +334,5 @@ function ChangeState(recid, from, to) {
     console.log("ChangeState: set '"+rs_inputend(recid)+ "' to "+ displayDate );
   }
 } // End function ChangeState
+
+

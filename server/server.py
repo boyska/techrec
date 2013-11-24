@@ -85,11 +85,11 @@ class RecServer:
     def delete( self, recid = None ):
         self.enable_cors()
         req = dict( request.POST.allitems() )
-        if not req.has_key( "id" ):
+        logging.info("Server: request delete %s " % ( req ) )
+        if not req.has_key( "recid" ):
             return self.rec_err("No valid ID")
         
-        print "Server request delete for id %s " % ( req["id"] )
-        if self.db.delete( req["id"] ):
+        if self.db.delete( req["recid"] ):
             return self.rec_msg("DELETE OK")
         else:
             return self.rec_err("DELETE error: %s" % (self.db.get_err()))

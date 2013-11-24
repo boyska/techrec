@@ -151,9 +151,9 @@ class RecDB:
     """" 
         DELETE RECORD 
     """
-    def delete(self,_id):
+    def delete(self,recid):
         
-        _rlist = self._search(_id=_id)
+        _rlist = self._search(recid=recid)
         
         if len(_rlist) == 0: 
             logging.info("DB: Delete: no record found!")
