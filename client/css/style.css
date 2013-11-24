@@ -97,10 +97,13 @@ a{
     border-top: 1px dashed #A60000;
 }
 
-#newrec .logarea {
+/* NEW REC AREA */
+
+.logarea {
     min-width:200px;
     min-height:100px;
     border:1px solid black;
+    font-size:0.8em;
 }
 
 #newrec, #formsearchrec {

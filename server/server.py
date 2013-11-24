@@ -32,60 +32,92 @@ class RecServer:
         self._app.route('/help/', callback=self.help)
 
         self._app.route('/create', method="POST", callback=self.create)        
-        self._app.post('/create', callback=self.create)        
+        # self._app.post('/create', callback=self.create)        
                 
-        # self._app.route('/get', method="GET", callback=self.getrec)        
-        # self._app.route('/get/', method="GET", callback=self.getrec)        
-        # self._app.route('/get/<recid>', method="GET", callback=self.getrec)        
-        
+        self._app.route('/update', method="POST", callback=self.update)
+                
         self._app.route('/search', method="POST", callback=self.search)        
-        # self._app.route('/search/', method="POST", callback=self.search)        
-        # self._app.route('/search/<recid>', method="POST", callback=self.search)        
-        # self._app.route('/oldsearch/<key>/<value>', method="POST", callback=self.search)        
-        # self._app.route('/search/<args:path>', method="POST", callback=self.search)
 
-        self._app.route('/delete/<recid>', method="GET", callback=self.delete)
-        self._app.route('/delete/<recid>/', method="GET", callback=self.delete)
+        self._app.route('/delete', method="POST", callback=self.delete)
+
         
     def extsearch( self, args ):
         print "ARG", args
         return self.rec_err("EXT")
         
+    """
+        CREATE HANDLER
+    """
     # @route('/create', method=['OPTIONS','POST'])
     def create(self):
         self.enable_cors()
         req = dict( request.POST.allitems() )
         ret = {}
-        print "REQ", req
+        print "Server:: Create request %s " % req
+
+        starttime = ""
         if req["starttime-"+req["recid"]] != "":
             starttime = datetime.datetime.strptime( req["starttime-"+req["recid"]] , "%Y/%m/%d %H:%M:%S")
-        else:
-            starttime = ""
 
+        endtime =  datetime.datetime.now()
         if req["endtime-"+req["recid"]] != "":
             endtime = datetime.datetime.strptime( req["endtime-"+req["recid"]] , "%Y/%m/%d %H:%M:%S")
-        else:
-            endtime = ""
-            
-        self.db.add( Rec(name=req["name-"+req["recid"]], 
-            starttime=starttime,
-            endtime=endtime ) 
-            )
 
-        return { "msg": "Nuova registrazione aggiunta" }
-   
+            
+        print "Name %s RECID %s Starttime %s EndTime %s" %(req["name-"+req["recid"]],req["recid"], starttime,endtime )
+        ret = self.db.add( Rec(name=req["name-"+req["recid"]], 
+                        recid=req["recid"], 
+                        starttime=starttime,
+                        endtime=endtime ) 
+                    )
+
+        return { "msg": "Nuova registrazione aggiunta", }
+        return self.rec_msg("Nuova registrazione creata! (id:" + ret.id *")")
+
     # @route('/active')
     def getactive(self):
         print "GetActive"
-
+            
+    """
+        DELETE HANDLER
+    """
     # @route('/delete/<recid>') # @route('/delete/<recid>/')
     def delete( self, recid = None ):
-        if not recid:
-            self.rec_err("No recid!")
-        self.rec_err("Delete")
+        self.enable_cors()
+        req = dict( request.POST.allitems() )
+        if not req.has_key( "id" ):
+            return self.rec_err("No valid ID")
         
-    def rec_err(self, msg):
-        return { "error": msg }
+        print "Server request delete for id %s " % ( req["id"] )
+        if self.db.delete( req["id"] ):
+            return self.rec_msg("DELETE OK")
+        else:
+            return self.rec_err("DELETE error: %s" % (self.db.get_err()))
+
+    """
+        UPDATE HANDLER
+    """
+    # @route('/delete/<recid>') # @route('/delete/<recid>/')
+    def update( self ):
+        self.enable_cors()
+        req  = dict( request.POST.allitems() )
+
+        ret={}
+        ret["starttime"]    = req ["starttime-"+req["recid"]]
+        ret["endtime"]      = req["endtime-"+req["recid"]]
+        ret["name"]         = req["name-"+req["recid"]]
+        
+        if self.db.update( req["recid"], ret ):
+            return self.rec_msg("Aggiornamento completato!");
+        else:
+            return self.rec_err("Errore Aggiornamento");
+        
+    """
+        JSON' RESPONDER
+    """
+    def rec_msg(self, msg): return self.rec_xerr("message", msg)
+    def rec_err(self, msg): return self.rec_xerr("error", msg)
+    def rec_xerr(self,_type,_msg): return { _type : _msg }
 
 
     """
@@ -95,34 +127,38 @@ class RecServer:
         self.enable_cors()
 
         req  = dict( request.POST.allitems() )
-
-        name = req["name"]
+        print "Search request: %s" % (req)
+        
+        name = "%s" % req["name"]
         if req["name"] == "": name = None
+       
         starttime = req["starttime"]
-        if req["starttime"] == "": name = None
+        if req["starttime"] == "": starttime = None
+        
         endtime = req["endtime"]
         if req["endtime"] == "": endtime = None
-            
-        values =  self.db._search(name=name, starttime=starttime, endtime=endtime)
+        
+        recid = req["recid"] 
+        if req["recid"]== "": recid = None
+        
+        active = True
+        
+        values =  self.db._search(recid=recid,name=name, starttime=starttime, endtime=endtime,active=active)
+        print "Returned Values %s" % values
         ret = {}
         for rec in values:
             recid = "rec-" + str(rec.id) 
             
             ret [recid] = {}
             ret [recid]["name"] = rec.name
+            ret [recid]["id"] = rec.id
+            ret [recid]["recid"] = rec.recid
             ret [recid]["starttime"] = rec.starttime.strftime("%Y-%m-%d-%H-%H-%s")
             if rec.endtime != None:
                 ret [recid]["endtime"] = rec.endtime.strftime("%Y-%m-%d-%H-%H-%s")
-            else:
-                rec.endtime = ""
                 
-            ret [recid]["state"] =  rec.state
-            
-        # print "RET ", ret 
-        """
-        print "VALUES ", values
-        print type(self.rec_err("sdiaso")), " - " , type(values)
-        print "ERR" , self.rec_err("sdiaso")"""
+            ret [recid]["active"] =  rec.active
+
         logging.info("Return: %s" % ret);
         return ret
                 

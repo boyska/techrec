@@ -7,7 +7,7 @@ import json
 import yaml
 
 try:
-  from sqlalchemy import create_engine, Column, Integer, String, DateTime
+  from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean
   from sqlalchemy.orm import sessionmaker
   from sqlalchemy.ext.declarative import declarative_base
 except:
@@ -16,27 +16,32 @@ except:
 
 logging.basicConfig(level=logging.INFO)
 
+STATE_ACTIVE    = 0 
+STATE_RUN       = 1 
+STATE_DOWN      = 2 
+
+PAGESIZE = 10
 
 """
 This class describe a single Record (Rec() class) and the 
 records manager (RecDB() class) 
 """
-
 Base = declarative_base()
 
-PAGESIZE = 10
-
-    
+"""
+ Rec entry
+"""    
 class Rec(Base):
   
     __tablename__ = 'rec'
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    starttime = Column(DateTime, nullable = True)
-    endtime = Column(DateTime, nullable = True)
-    state   = Column(String)
+    id          = Column(Integer, primary_key=True)
+    recid       = Column(String)
+    name        = Column(String, nullable = True)
+    starttime   = Column(DateTime, nullable = True)
+    endtime     = Column(DateTime, nullable = True)
+    active      = Column(Boolean, default = True)
 
-    def __init__(self, name="", starttime=None, endtime=None, asjson=""):
+    def __init__(self, recid="", name="", starttime=None, endtime=None, asjson=""):
         self.error = 0 
         self.job = None    
     
@@ -44,6 +49,7 @@ class Rec(Base):
           self.name = name
           self.starttime = starttime
           self.endtime = endtime
+          self.recid = recid
         else:
             #try:
                 # dec = json.loads( unicode(asjson) )
@@ -54,36 +60,40 @@ class Rec(Base):
             print("dec %s %s" % (dec,type(dec))) 
             print("asjson %s %s" % (asjson,type(asjson))) 
           
+            self.recid = asjson[0]['recid']
             self.name = asjson[0]['name'] 
             self.starttime = asjson[0]['starttime']
-            selfendtime = asjson[0]['endtime']
+            self.endtime = asjson[0]['endtime']
     
-        self.state = "CODA"
+        self.state = STATE_ACTIVE
 
 
     # launch the job for processing files
     def start(self):
         self.job = RecJob( self )
 
+    """
     def getvalues(self,val=None):
         return { "id":self.id,
+                "recid":self.recid,
                 "name":self.name,
                 "starttime":self.starttime, 
                 "endtime":self.endtime,
-                "state": self.state
+                "active": self.active
                 }
-      
+    """
     def err(self): 
         return self.error
 
     def set_run(self):
-        self.state = "RUN"
+        self.active = STATE_RUN
 
     def set_done(self):
-        self.state = "DONE"
+        self.active = STATE_DOWN
 
     def __repr__(self):
-        return "<Rec('%s','%s','%s', '%s', '%s')>" % (self.id, self.name, self.starttime, self.endtime, self.state)
+        return "<Rec(id:'%s',recid:'%s',name:'%s',Start: '%s',End: '%s',Active: '%s')>" \
+                % (self.id, self.recid, self.name, self.starttime, self.endtime, self.active)
 
 """ ************ 
 RecDB
@@ -105,50 +115,115 @@ class RecDB:
         
         Session = sessionmaker(bind=self.engine)
         self.session = Session()    
+
+        self.err = ""
+        self.recordtimeformat = "%Y/%m/%d %H:%M:%S"
         
     def add(self, simplerecord):
-        logging.debug("New Record: %s" % simplerecord)
-        self.session.add( simplerecord )
+        print self.session.add( simplerecord )
         self.commit()
+        logging.info("New Record: %s" % simplerecord)
         return ( simplerecord )
 
-    def delete(self,id):
-        _r = self.get_by_id(id)
+
+    """" 
+        UPDATE RECORD 
+    """
+    def update(self, recid, rec):
+
+        _rlist = self._search(recid=recid)
+        if not len(_rlist) == 1:
+            return False
+
+        logging.info("DB:: Update request %s:%s " % (recid, rec))
+        logging.info("DB:: Update: data before %s" % _rlist[0])
+
+        # 2013-11-24 22:22:42
+        _rlist[0].starttime = datetime.datetime.strptime(rec["starttime"], self.recordtimeformat)
+        _rlist[0].endtime = datetime.datetime.strptime(rec["endtime"], self.recordtimeformat)
+        _rlist[0].name = rec["name"]
+        logging.info("DB:: Update: data AFTER %s" % _rlist[0])
+
+        self.commit()
+        logging.info("DB:: Update complete")
+        return True
+
+    """" 
+        DELETE RECORD 
+    """
+    def delete(self,_id):
         
-        if _r:
-            self.session.delete( _r )
-            self.commit()
-            return
-        logging.info("Delete error: ID %s not found!", id)
+        _rlist = self._search(_id=_id)
+        
+        if len(_rlist) == 0: 
+            logging.info("DB: Delete: no record found!")
+            self.err = "No rec found"
+            return False
+            
+        if len(_rlist) > 1: 
+            logging.info("DB: Delete: multilpe records found!")
+            self.err = "multiple ID Found %s" % (_rlist)
+            return False
+
+        self.session.delete( _rlist[0] )
+        logging.info("DB: Delete: delete complete")
+        self.commit()
+        return True
         
     def commit(self):
+        logging.info("DB: Commit!!")
         self.session.commit()
 
     def get_all(self, page=0, page_size=PAGESIZE):
         return self._search(page=page, page_size=page_size)
     
-    def _search(self, _id=None, name=None, starttime=None, endtime=None, state=None, page=0, page_size=PAGESIZE):
+    def _search(self, _id=None, name=None, recid=None, starttime=None, endtime=None, active=None, page=0, page_size=PAGESIZE):
+    
+        logging.info("DB: Search => id:%s recid:%s name:%s starttime:%s endtime=%s active=%s" % (_id,recid,name,starttime,endtime,active))
+        
         query = self.session.query(Rec)
-        if _id:         query = query.filter_by(id=_id)
-        if name:        query = query.filter_by(name=name)
-        if starttime:   query = query.filter(Rec.starttime>starttime)
-        if endtime:     query = query.filter(Rec.endtime<endtime)
-        if state:       query = query.filter(state=state)
+        
+        if not _id == None:         query = query.filter_by(id=_id)
+        if not recid == None:       query = query.filter_by(recid=recid)
+        if not name == None:        query = query.filter(Rec.name.like("%"+name+"%"))
+        try:
+            if not starttime == None:   
+                _st = datetime.datetime.strptime(starttime, self.recordtimeformat)
+                query = query.filter(Rec.starttime > _st )
+        except:
+                logging.info("DB: search : no valid starttime")    
+        try:
+            if not endtime == None:     
+                _et = datetime.datetime.strptime(endtime, self.recordtimeformat)
+                query = query.filter(Rec.endtime < _et )
+        except ValueError:
+            logging.info("DB: search : no valid endtime")    
+
+        if not active == None:      query = query.filter(Rec.active==active)
+        
         if page_size:   query = query.limit(page_size)
         if page:        query = query.offset(page*page_size)
-
-        return query.all()
+        print query
+        ret = query.all()
+        # print "Sending: %s" % ret
+        return ret
         
-    def get_by_id(self,id):
+    def get_err(self): 
+        print "DB error: %s" % (self.err)
+        t = self.err
+        self.err = ""
+        return t
+        
+    """def get_by_id(self,id):
         try:
             return self._search( _id=id )[0]
         except:
             return None
-        
+    """  
+    
 # Just for debug
 def printall( queryres ):
-    for record in queryres:
-        print "R: %s" % record
+    for record in queryres: print "Record: %s" % record
 
 
 # Job in thread
@@ -161,7 +236,7 @@ class RecJob():
         self.starttime = rec.starttime
         self.endtime = rec.endtime
         
-    def run(self):
+    def extract(self):
 
         if type(self.starttime) != type(datetime.datetime.now()):
             logging.info("Starttime format error")
@@ -218,8 +293,8 @@ if __name__ == "__main__":
     a = Rec(name="Mimmo1", starttime=_mytime, endtime=_endtime)
     j = RecJob( a )
     # print (j)
-    j.run()
-    
+    # j.extract()
+    printall( db._search() )
     sys.exit("End test job")
       
     # a = Rec(name="Mimmo1", starttime=_mytime, endtime=None)
