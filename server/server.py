@@ -1,9 +1,10 @@
 # from bottle import hook, response, route, run, static_file, request
-from bottle import Bottle, hook, template, response, request,static_file
-import json
-import socket
+import datetime
+import logging
 
-from techrec import * 
+from bottle import Bottle, hook, response, request,static_file
+
+from techrec import Rec, RecDB
 
 class RecServer:
     def __init__(self,host="127.0.0.1", port=8000):
@@ -16,7 +17,7 @@ class RecServer:
         self.db = RecDB()
 
     def start(self):
-        self._app.run(host=self._host, port=self._port)
+        self._app.run(host=self._host, port=self._port, debug=True)
 
     @hook('after_request')
     def enable_cors(self):
@@ -31,20 +32,29 @@ class RecServer:
         self._app.route('/help', callback=self.help)
         self._app.route('/help/', callback=self.help)
 
-        self._app.route('/create', method="POST", callback=self.create)        
-        # self._app.post('/create', callback=self.create)        
-                
+        self._app.route('/create', method="POST", callback=self.create)
+        # self._app.post('/create', callback=self.create)
+
         self._app.route('/update', method="POST", callback=self.update)
-                
-        self._app.route('/search', method="POST", callback=self.search)        
-
+        self._app.route('/search', method="POST", callback=self.search)
         self._app.route('/delete', method="POST", callback=self.delete)
+        self._app.route('/static/<filepath:path>',
+                        callback= lambda filepath: static_file(filepath, root='static/'))
+        self._app.route('/js/<f>',
+                        callback= lambda f: static_file(f, root='static/js/'))
+        self._app.route('/css/<f>',
+                        callback= lambda f: static_file(f, root='static/css/'))
+        self._app.route('/img/<f>',
+                        callback= lambda f: static_file(f, root='static/img/'))
+        self._app.route('/', callback=lambda: static_file('index.html',
+            root='pages/'))
+        self._app.route('/tempo', callback=lambda: static_file('tempo.html',
+            root='pages/'))
 
-        
     def extsearch( self, args ):
         print "ARG", args
         return self.rec_err("EXT")
-        
+
     """
         CREATE HANDLER
     """
@@ -63,12 +73,12 @@ class RecServer:
         if req["endtime-"+req["recid"]] != "":
             endtime = datetime.datetime.strptime( req["endtime-"+req["recid"]] , "%Y/%m/%d %H:%M:%S")
 
-            
+
         print "Name %s RECID %s Starttime %s EndTime %s" %(req["name-"+req["recid"]],req["recid"], starttime,endtime )
-        ret = self.db.add( Rec(name=req["name-"+req["recid"]], 
-                        recid=req["recid"], 
+        ret = self.db.add( Rec(name=req["name-"+req["recid"]],
+                        recid=req["recid"],
                         starttime=starttime,
-                        endtime=endtime ) 
+                        endtime=endtime )
                     )
 
         return { "msg": "Nuova registrazione aggiunta", }
@@ -77,7 +87,7 @@ class RecServer:
     # @route('/active')
     def getactive(self):
         print "GetActive"
-            
+
     """
         DELETE HANDLER
     """
@@ -88,7 +98,7 @@ class RecServer:
         logging.info("Server: request delete %s " % ( req ) )
         if not req.has_key( "recid" ):
             return self.rec_err("No valid ID")
-        
+
         if self.db.delete( req["recid"] ):
             return self.rec_msg("DELETE OK")
         else:
@@ -106,12 +116,12 @@ class RecServer:
         ret["starttime"]    = req ["starttime-"+req["recid"]]
         ret["endtime"]      = req["endtime-"+req["recid"]]
         ret["name"]         = req["name-"+req["recid"]]
-        
+
         if self.db.update( req["recid"], ret ):
             return self.rec_msg("Aggiornamento completato!");
         else:
             return self.rec_err("Errore Aggiornamento");
-        
+
     """
         JSON' RESPONDER
     """
@@ -128,27 +138,27 @@ class RecServer:
 
         req  = dict( request.POST.allitems() )
         print "Search request: %s" % (req)
-        
+
         name = "%s" % req["name"]
         if req["name"] == "": name = None
-       
+
         starttime = req["starttime"]
         if req["starttime"] == "": starttime = None
-        
+
         endtime = req["endtime"]
         if req["endtime"] == "": endtime = None
-        
-        recid = req["recid"] 
+
+        recid = req["recid"]
         if req["recid"]== "": recid = None
-        
+
         active = True
-        
+
         values =  self.db._search(recid=recid,name=name, starttime=starttime, endtime=endtime,active=active)
         print "Returned Values %s" % values
         ret = {}
         for rec in values:
-            recid = "rec-" + str(rec.id) 
-            
+            recid = "rec-" + str(rec.id)
+
             ret [recid] = {}
             ret [recid]["name"] = rec.name
             ret [recid]["id"] = rec.id
@@ -156,15 +166,15 @@ class RecServer:
             ret [recid]["starttime"] = rec.starttime.strftime("%Y-%m-%d-%H-%H-%s")
             if rec.endtime != None:
                 ret [recid]["endtime"] = rec.endtime.strftime("%Y-%m-%d-%H-%H-%s")
-                
+
             ret [recid]["active"] =  rec.active
 
         logging.info("Return: %s" % ret);
         return ret
-                
+
     # @route('/favicon.ico')
     def favicon(self):
-        return static_file('icon.ico', root="./img/", mimetype="image/ico")
+        return static_file('icon.ico', root="/static/img/", mimetype="image/ico")
 
     # @route('/help')
     def help(self):
@@ -184,5 +194,5 @@ class RecServer:
     TESTs
 """
 if __name__ == "__main__":
-    c = RecServer(host="0.0.0.0")
+    c = RecServer(host="localhost")
     c.start()

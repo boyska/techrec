@@ -5,19 +5,19 @@
 
 <title> TechREC </title>
 
-<link rel="stylesheet" type="text/css" href="css/style.css">
+<link rel="stylesheet" type="text/css" href="/static/css/style.css">
 
-<script src="js/jquery-1.9.1.min.js"></script>
-<script type="text/javascript" src="js/reclibrary.js"></script>
+<script src="/static/js/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="/static/js/reclibrary.js"></script>
 
 <script>
-/* 
+/*
 TODO:
-prendere lo stato !!! 
+prendere lo stato !!!
 */
 $(document).ready(function(){
 
-    $("#searchform").submit( 
+    $("#searchform").submit(
         function (event) {
             event.preventDefault();
             dataString = $(this).serialize();
@@ -28,29 +28,29 @@ $(document).ready(function(){
 
                 $.each(data, function(key, val) {
                     console.log("Extract " + key );
-										
+
 					var divstring = "<div class=\"searchresult\" id=\""+ rs_trxarea(key) +"\"> </div>";
 
                     $("#searchresult").append( divstring );
                     // var str = newformstr( key ); // new form
 
 					var str = "";
-					str += "<div class=\"namevalues\">"+val.name+" - <a href=\"\">Scarica</a> <a href=\"\" id=\"delete-"+val.id+"\">Cancella</a></div>"; 
-					str += "<div class=\"namevalues\">RECID: "+val.recid+" ID: "+ val.id + " Active " + val.active + "</div>"; 
+					str += "<div class=\"namevalues\">"+val.name+" - <a href=\"\">Scarica</a> <a href=\"\" id=\"delete-"+val.id+"\">Cancella</a></div>";
+					str += "<div class=\"namevalues\">RECID: "+val.recid+" ID: "+ val.id + " Active " + val.active + "</div>";
 					str += "<div class=\"timevalues\">["+val.starttime+"  >>> "+val.endtime+"]</div>"
 
 					$("#"+rs_trxarea(key)).html(str);
                     $("#delete-"+val.id).click(function(evt) {
                             evt.preventDefault();
                             recDelete(val.recid, rs_trxarea(key) );
-                            
+
                         }
-                    ); // End of delete link handler 
-                    
+                    ); // End of delete link handler
+
                 });
             });
         });
-    $("#searchform").submit();   
+    $("#searchform").submit();
     });
 
 </script>
@@ -60,12 +60,12 @@ $(document).ready(function(){
 <body>
 
 <div id="pagecontainer">
-            
+
   <h1> techr*c </h1>
-        
+
   <h2> <a href="index.html"> Nuova registrazione</a> </h2>
-        
-  <div id="buttonscontainer"> 
+
+  <div id="buttonscontainer">
     <form action="#" method="POST" id="searchform">
         <input type="text" id="recid"       name="recid"        placeholder="Codice Registrazione" /> <br />
         <input type="text" id="name"        name="name"         placeholder="name"  />      <br />
@@ -75,11 +75,11 @@ $(document).ready(function(){
     </form>
   </div>
 
-  <div id="searchresult"> 
-  
-  </div> 
+  <div id="searchresult">
 
-   
+  </div>
+
+
 </div>
 
 <div id="footer">
