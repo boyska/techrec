@@ -1,62 +1,43 @@
-==========================================
-    techrec
-==========================================
+TECHREC
+=======
 
-BUG and roadmap
-See roadmap for details
-
---------
- Client
---------
-
-The Client is a JS script that exchange data with server via JSON
-
---------
- Server
---------
-
-The Server is a python software and uses the bottle library to implements a web 
-services 
+A Python2 web application that assist radio speakers in recording their shows.
+At the moment, it relies on some details that are specific of our radio (like
+the directory/format of the continous recording).
 
 
-Data Format
-===================================
 
---------
- Create 
---------
-JSON = {
-        'starttime-rec-1385231288390': '2013/11/23 19:32:49', 
-        'endtime-rec-1385231288390': '2013/11/23 19:32:49', 
-        'recid': 'rec-1385231288390', 
-        'name-rec-1385231288390': 'adasd',
-        'op': 'new'
-        }
+Implementation details
+======================
 
---------
-Retrieve
+It is based on bottle, to get a minimal framework. Rest APIs are offered
+through it, and the static site uses them.
+
+Create
 --------
 
+    JSON = {
+            'starttime-rec-1385231288390': '2013/11/23 19:32:49',
+            'endtime-rec-1385231288390': '2013/11/23 19:32:49',
+            'recid': 'rec-1385231288390',
+            'name-rec-1385231288390': 'adasd',
+            'op': 'new'
+            }
 
---------
- Update
--------- 
+Update
+-------
 
-JSON = {
-        'starttime-rec-1385231288390': '2013/11/23 19:32:49', 
-        'endtime-rec-1385231288390': '2013/11/23 19:32:49', 
-        'recid': 'rec-1385231288390', ### VALID REC ID 
-        'name-rec-1385231288390': 'adasd',
-        'op': 'update'
-        }
-        
---------
- Delete
---------
-JSON = {
-        'recid': 'rec-1385231288390', ### VALID REC ID 
-        'op': 'delete'
-        }
+    JSON = {
+            'starttime-rec-1385231288390': '2013/11/23 19:32:49',
+            'endtime-rec-1385231288390': '2013/11/23 19:32:49',
+            'recid': 'rec-1385231288390', ### VALID REC ID
+            'name-rec-1385231288390': 'adasd',
+            'op': 'update'
+            }
 
-
-
+Delete
+------
+    JSON = {
+            'recid': 'rec-1385231288390', ### VALID REC ID
+            'op': 'delete'
+            }
