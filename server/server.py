@@ -22,7 +22,6 @@ class RecServer:
         ### This is the API part of the app
         # TODO: move to namespace /api/
         # TODO: create a "sub-application"
-        self._app.route('/favicon.ico', callback=self.favicon)
         self._app.route('/help', callback=self.help)
         self._app.route('/help/', callback=self.help)
 
@@ -36,12 +35,6 @@ class RecServer:
         ## Static part of the site
         self._app.route('/static/<filepath:path>',
                         callback= lambda filepath: static_file(filepath, root='static/'))
-        self._app.route('/js/<f>',
-                        callback= lambda f: static_file(f, root='static/js/'))
-        self._app.route('/css/<f>',
-                        callback= lambda f: static_file(f, root='static/css/'))
-        self._app.route('/img/<f>',
-                        callback= lambda f: static_file(f, root='static/img/'))
         self._app.route('/', callback=lambda: redirect('/new.html'))
         self._app.route('/new.html', callback=lambda: static_file('new.html',
             root='pages/'))
@@ -165,10 +158,6 @@ class RecServer:
 
         logging.info("Return: %s" % ret);
         return ret
-
-    # @route('/favicon.ico')
-    def favicon(self):
-        return static_file('icon.ico', root="/static/img/", mimetype="image/ico")
 
     # @route('/help')
     def help(self):
