@@ -6,17 +6,12 @@ from bottle import Bottle, request, static_file, redirect
 from techrec import Rec, RecDB
 
 class RecServer:
-    def __init__(self,host="127.0.0.1", port=8000):
-        self._host = host
-        self._port = port
-
+    def __init__(self):
         self._app = Bottle()
         self._route()
 
         self.db = RecDB()
 
-    def start(self):
-        self._app.run(host=self._host, port=self._port, debug=True)
 
     def _route(self):
         ### This is the API part of the app
@@ -55,11 +50,11 @@ class RecServer:
         print "Server:: Create request %s " % req
 
         starttime = ""
-        if req["starttime-"+req["recid"]] != "":
+        if req["starttime-" + req["recid"]] != "":
             starttime = datetime.datetime.strptime( req["starttime-"+req["recid"]] , "%Y/%m/%d %H:%M:%S")
 
         endtime =  datetime.datetime.now()
-        if req["endtime-"+req["recid"]] != "":
+        if req["endtime-" + req["recid"]] != "":
             endtime = datetime.datetime.strptime( req["endtime-"+req["recid"]] , "%Y/%m/%d %H:%M:%S")
 
 
@@ -165,7 +160,7 @@ class RecServer:
 
     # @route('/help')
     def help(self):
-        return " <h1>help</h1><hr/>\
+        return "<h1>help</h1><hr/>\
         <h2>/get, /get/, /get/<recid> </h2>\
         <h3>Get Info about rec identified by RECID </h3>\
         \
@@ -177,9 +172,6 @@ class RecServer:
         <h2>/update </h2>\
         <h3>Not implemented.</h3>"
 
-"""
-    TESTs
-"""
 if __name__ == "__main__":
-    c = RecServer(host="localhost")
-    c.start()
+    c = RecServer()
+    c._app.run(host="localhost", port="8000", debug=True, reloader=True)
