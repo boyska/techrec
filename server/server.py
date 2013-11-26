@@ -2,7 +2,7 @@
 import datetime
 import logging
 
-from bottle import Bottle, hook, response, request,static_file
+from bottle import Bottle, hook, response, request,static_file, redirect
 
 from techrec import Rec, RecDB
 
@@ -46,9 +46,10 @@ class RecServer:
                         callback= lambda f: static_file(f, root='static/css/'))
         self._app.route('/img/<f>',
                         callback= lambda f: static_file(f, root='static/img/'))
-        self._app.route('/', callback=lambda: static_file('index.html',
+        self._app.route('/', callback=lambda: redirect('/new.html'))
+        self._app.route('/new.html', callback=lambda: static_file('new.html',
             root='pages/'))
-        self._app.route('/tempo', callback=lambda: static_file('tempo.html',
+        self._app.route('/tempo.html', callback=lambda: static_file('tempo.html',
             root='pages/'))
 
     def extsearch( self, args ):

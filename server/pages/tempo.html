@@ -9,52 +9,7 @@
 
 <script src="/static/js/jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="/static/js/reclibrary.js"></script>
-
-<script>
-/*
-TODO:
-prendere lo stato !!!
-*/
-$(document).ready(function(){
-
-    $("#searchform").submit(
-        function (event) {
-            event.preventDefault();
-            dataString = $(this).serialize();
-            var request = RecAjax("search", dataString);
-
-          	$("#searchresult").html(" ");
-            request.done( function(data) {
-
-                $.each(data, function(key, val) {
-                    console.log("Extract " + key );
-
-					var divstring = "<div class=\"searchresult\" id=\""+ rs_trxarea(key) +"\"> </div>";
-
-                    $("#searchresult").append( divstring );
-                    // var str = newformstr( key ); // new form
-
-					var str = "";
-					str += "<div class=\"namevalues\">"+val.name+" - <a href=\"\">Scarica</a> <a href=\"\" id=\"delete-"+val.id+"\">Cancella</a></div>";
-					str += "<div class=\"namevalues\">RECID: "+val.recid+" ID: "+ val.id + " Active " + val.active + "</div>";
-					str += "<div class=\"timevalues\">["+val.starttime+"  >>> "+val.endtime+"]</div>"
-
-					$("#"+rs_trxarea(key)).html(str);
-                    $("#delete-"+val.id).click(function(evt) {
-                            evt.preventDefault();
-                            recDelete(val.recid, rs_trxarea(key) );
-
-                        }
-                    ); // End of delete link handler
-
-                });
-            });
-        });
-    $("#searchform").submit();
-    });
-
-</script>
-
+<script type="text/javascript" src="/static/js/tempo.js"> </script>
 </head>
 
 <body>
@@ -63,7 +18,7 @@ $(document).ready(function(){
 
   <h1> techr*c </h1>
 
-  <h2> <a href="index.html"> Nuova registrazione</a> </h2>
+  <h2> <a href="/new.html"> Nuova registrazione</a> </h2>
 
   <div id="buttonscontainer">
     <form action="#" method="POST" id="searchform">
