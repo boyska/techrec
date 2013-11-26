@@ -8,7 +8,7 @@ $(document).ready(function(){
 		function (event) {
 			event.preventDefault();
 			dataString = $(this).serialize();
-			var request = RecAjax("search", dataString);
+			var request = $.getJSON('/search', dataString);
 
 			$("#searchresult").html(" ");
 			request.done( function(data) {

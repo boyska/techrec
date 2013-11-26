@@ -1,8 +1,7 @@
-# from bottle import hook, response, route, run, static_file, request
 import datetime
 import logging
 
-from bottle import Bottle, hook, response, request,static_file, redirect
+from bottle import Bottle, request, static_file, redirect
 
 from techrec import Rec, RecDB
 
@@ -19,15 +18,10 @@ class RecServer:
     def start(self):
         self._app.run(host=self._host, port=self._port, debug=True)
 
-    @hook('after_request')
-    def enable_cors(self):
-        #These lines are needed for avoiding the "Access-Control-Allow-Origin" errors
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'PUT, GET, POST, DELETE, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
-
     def _route(self):
+        ### This is the API part of the app
+        # TODO: move to namespace /api/
+        # TODO: create a "sub-application"
         self._app.route('/favicon.ico', callback=self.favicon)
         self._app.route('/help', callback=self.help)
         self._app.route('/help/', callback=self.help)
@@ -36,8 +30,10 @@ class RecServer:
         # self._app.post('/create', callback=self.create)
 
         self._app.route('/update', method="POST", callback=self.update)
-        self._app.route('/search', method="POST", callback=self.search)
+        self._app.route('/search', method=["GET", "POST"], callback=self.search)
         self._app.route('/delete', method="POST", callback=self.delete)
+
+        ## Static part of the site
         self._app.route('/static/<filepath:path>',
                         callback= lambda filepath: static_file(filepath, root='static/'))
         self._app.route('/js/<f>',
@@ -61,7 +57,6 @@ class RecServer:
     """
     # @route('/create', method=['OPTIONS','POST'])
     def create(self):
-        self.enable_cors()
         req = dict( request.POST.allitems() )
         ret = {}
         print "Server:: Create request %s " % req
@@ -94,7 +89,6 @@ class RecServer:
     """
     # @route('/delete/<recid>') # @route('/delete/<recid>/')
     def delete( self, recid = None ):
-        self.enable_cors()
         req = dict( request.POST.allitems() )
         logging.info("Server: request delete %s " % ( req ) )
         if not req.has_key( "recid" ):
@@ -110,7 +104,6 @@ class RecServer:
     """
     # @route('/delete/<recid>') # @route('/delete/<recid>/')
     def update( self ):
-        self.enable_cors()
         req  = dict( request.POST.allitems() )
 
         ret={}
@@ -126,18 +119,18 @@ class RecServer:
     """
         JSON' RESPONDER
     """
-    def rec_msg(self, msg): return self.rec_xerr("message", msg)
-    def rec_err(self, msg): return self.rec_xerr("error", msg)
-    def rec_xerr(self,_type,_msg): return { _type : _msg }
+    def rec_msg(self, msg): return {"message": msg, "status": True}
+    def rec_err(self, msg): return {"error": msg, "status": False}
 
 
     """
      @route('/search') # @route('/search/')  # @route('/search/<key>/<value>')
     """
     def search( self, args=None):
-        self.enable_cors()
-
-        req  = dict( request.POST.allitems() )
+        if request.method == 'GET':
+            req  = dict( request.GET.allitems() )
+        else:
+            req  = dict( request.POST.allitems() )
         print "Search request: %s" % (req)
 
         name = "%s" % req["name"]

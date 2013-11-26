@@ -22,7 +22,7 @@ var txt_start       = "Inizia";
 var txt_stop        = "Ferma";
 var txt_download    = "Scarica";
 
-var srvaddr         = "http://127.0.0.1:8000";
+var srvaddr         = "/";
 
 var almostone       = false;
 var noplusbotton    = true;
@@ -31,18 +31,18 @@ var rec_name_default = "";
 
 /*
 TODO: cambiare logica
-Quando premo il primo tasto, faccio la crazione, 
+Quando premo il primo tasto, faccio la crazione,
 per ogni altro pulsante, faccio solo e sempre UPDATE
 */
-/** 
-  * Perform Ajax async loading 
+/**
+  * Perform Ajax async loading
   **/
 
-function newformstr ( recid , butflag=false ) 
+function newformstr ( recid , butflag=false )
 {
     var formid = rs_formid( recid );
     var str = "<form id=\""+formid+"\" name=\""+formid+"\" action=\"#\">";
-    
+
     if (butflag) {
         str = str + "<input type=\"button\" name=\""+trx_startbut(recid)+"\" id=\""+trx_startbut(recid)+"\" ";
         str = str + " class=\"recbutton\" value=\"Inizia\" />";
@@ -53,7 +53,7 @@ function newformstr ( recid , butflag=false )
         str = str + "<input type=\"submit\" name=\""+trx_endbut(recid)+"\" id=\""+trx_endbut(recid)+"\" ";
         str = str + " class=\"recbutton\" value=\"Download\" />";
     }
-    
+
     str = str + "<input type=\"hidden\" id=\"recid\" name=\"recid\" value=\""+recid+"\" />";
     str = str + "<input type=\"text\" id=\""+rs_trxname(recid)+"\" name=\""+rs_trxname(recid)+"\" />";
     str = str + "<input type=\"text\" id=\""+rs_inputstart(recid)+"\" name=\""+rs_inputstart(recid)+"\" />";
@@ -69,11 +69,11 @@ function newformstr ( recid , butflag=false )
     str = str + "<input type=\"text\" id=\"endtime\" name=\"endtime\" /> ";
     */
     str = str + "</form>";
-    
+
     return str;
 }
-    
-/** 
+
+/**
 *  GetActive Recs
 **/
 
@@ -81,46 +81,46 @@ function rec_active( recid ) {
     dataString = "";
     var request = RecAjax("search", dataString);
 
-    request.done( function(data) { 	
+    request.done( function(data) {
         $.each(data, function(key, val) {
             console.log("Key " + key + " > VAL " + val );
 		    $("#"+trx_logarea( recid )).append( "Key " + key + " > VAL " + val + "<br>"  );
 		});
 
-    	console.log("Req OK: "+ data); 
+    	console.log("Req OK: "+ data);
 	    // console.log("request"+ req);
     	ChangeState(recid, trx_downbut(recid) , trx_endbut(recid));
     });
 }
 
 
-/** 
-  *  New record 
+/**
+  *  New record
   **/
-function rec_new( ) 
+function rec_new( )
 {
 
     var myDate = new Date()
-	console.log("New ID "+ myDate.getTime());	
+	console.log("New ID "+ myDate.getTime());
     var recid = "rec-"+ myDate.getTime();
-    
+
     console.log("[rec_new] New Rec " + recid);
 
     $("#buttonscontainer").append( "<div id=\""+rs_trxarea(recid)+"\" class=\"recarea\"> </div>" );
     $("#"+rs_trxarea(recid)).append( "<div id=\""+rs_buttonarea(recid)+"\" class=\"buttonarea\"> </div>" );
     console.log("[rec_new"+recid+"] add div (TRXArea, ButtonArea) ok " );
-    
+
     var formid = rs_formid( recid );
-    
-    var str = newformstr(recid, butflag=true); 
+
+    var str = newformstr(recid, butflag=true);
     $("#"+rs_buttonarea(recid)).append( str );
-    
+
     $("#"+trx_stopbut(recid)).hide();
     $("#"+trx_downbut(recid)).hide();
     $("#"+trx_endbut(recid)).hide();
-    
+
     console.log("[rec_new "+recid+"] Form OK");
-    
+
     $("#"+rs_buttonarea(recid)).append( "<div class=\"dellinkarea\" > <a href=\"#\" id="+rs_dellink(recid)+"> cancella</a> </div>" );
 
     // INSERT AND POPULATE BUTTON AREA
@@ -130,53 +130,53 @@ function rec_new( )
 	$("#"+rs_dellink(recid)).click(function(){
 		console.log("Remove " + rs_trxarea(recid) + "[ID"+recid+"]");
 		 // $("#"+rs_trxarea(recid)).remove();
-		recDelete (recid,rs_trxarea(recid)); 
+		recDelete (recid,rs_trxarea(recid));
     });
-    
+
     // FORM SUBMIT: THE REC IS STOPPEND AND MUST BE PROCESSED
     $("#"+formid).submit(function(event){
  		// Immediately, mark the end time (stop action)
-		ChangeState(recid, trx_downbut(recid) , trx_endbut(recid)); 
-        
+		ChangeState(recid, trx_downbut(recid) , trx_endbut(recid));
+
         // Force a Name
 		while (true) {
-	    	if ( $("#"+rs_trxname(recid)).val() == "" ) 	
+	    	if ( $("#"+rs_trxname(recid)).val() == "" )
 			{
 				var tmpname = prompt("Nessun nome di trasmissione!!!");
 				$("#"+rs_trxname(recid)).val(tmpname);
 				$("#"+trx_logarea(recid)).append("Titolo: <b>"+ tmpname +"</b> <br/>");
 			}
-    		else { break; } 
+    		else { break; }
 		}
 
-        event.preventDefault(); 
-       
+        event.preventDefault();
+
         // Update data (send to server) in order to save some information
-        recUpdate(recid); 
-        
-        recStart(recid); 
+        recUpdate(recid);
+
+        recStart(recid);
 
     }); // End of form SUBMIT
 
     // Bind the STOP button
-    $("#"+trx_stopbut(recid)).click( function(event){ 
-    
-        event.preventDefault(); 
-        ChangeState(recid, trx_stopbut(recid) , trx_downbut(recid));  
+    $("#"+trx_stopbut(recid)).click( function(event){
+
+        event.preventDefault();
+        ChangeState(recid, trx_stopbut(recid) , trx_downbut(recid));
         recUpdate(recid);
-        
+
     }); // End of STOP button
-    
+
     // Bind the START button
-    $("#"+trx_startbut(recid)).click( function(event){ 
-    
-        // Immediately, mark the start time (start action) and send it to Server 
+    $("#"+trx_startbut(recid)).click( function(event){
+
+        // Immediately, mark the start time (start action) and send it to Server
 		ChangeState(recid, trx_startbut(recid) , trx_stopbut(recid));
-        event.preventDefault(); 
+        event.preventDefault();
         recNew( recid );
 
     }); // End of START button
-    
+
     console.log("New form has been built.");
 }
 
@@ -187,21 +187,21 @@ function recDelete ( recid, targetarea ) {
 
     console.log("Del rec: "+dataString);
     var req_del = RecAjax("delete", dataString);
-                            
+
     req_del.done (function(data) {
         $.each(data, function(del_key, del_val) {
-            console.log("K:V " + del_key +":"+del_val ); 
-    
+            console.log("K:V " + del_key +":"+del_val );
+
             if (del_key == "message") {
                 $("#"+targetarea).fadeOut( 200, function() { $(this).remove(); });
-                console.log("delete area "+rs_trxarea(key));    
+                console.log("delete area "+rs_trxarea(key));
 
-            } 
-            
+            }
+
             if (del_key == "error") {
                 alert("Impossibile cancellare elemento:\n" + del_val );
             }
-            
+
         });
     });
 }
@@ -212,10 +212,10 @@ function recNew ( recid ) {
     var dataString = $("#"+formid).serialize();
 
     console.log("New rec: "+dataString);
-    
+
     var request = RecAjax("create", dataString);
 
-    request.done( function(data) { 	
+    request.done( function(data) {
     	$.each(data, function(key, val) {
       	    console.log("Received (K:V) ("+key+":"+val+")") ;
       	    if (key == "msg") {
@@ -236,13 +236,13 @@ function recUpdate( recid  ) {
     var formid = rs_formid( recid );
     var dataString = $("#"+formid).serialize();
     console.log("Sending Ajax Update request: "+ dataString);
-    
+
     //event.preventDefault();
     var request = RecAjax("update", dataString );
-    request.done( function(data) { 	
+    request.done( function(data) {
     	$.each(data, function(key, val) {
           	console.log("recUpdate receive (k:v) ("+key+":"+val+")" );
-          	
+
           	if (key == "message") {
           	    var str = "";
           	    str += "<b>RecID</b> "+ recid + "</br>"
@@ -256,22 +256,22 @@ function recUpdate( recid  ) {
                     $("#"+trx_logarea(recid)).append( "<b>In Elaborazione</b>" );
                 }
         	}
-        	
+
           	if (key == "error") {
         		$("#"+trx_logarea( recid )).append( "Error:" + val +"<br>"  );
 		    }
-    	}); // end of each 
+    	}); // end of each
     }); // end of request.done
 }
 
 /*
- * 
+ *
  * 	AJAX REQUEST
- * 
+ *
  */
 function RecAjax(apipath, dataString ) {
 
-   	var srv = srvaddr + "/" + apipath ;
+   	var srv = srvaddr + apipath ;
 
     var request = $.ajax({
         type: "POST",
@@ -283,14 +283,14 @@ function RecAjax(apipath, dataString ) {
 
     request.fail(function (jqXHR, textStatus, errorThrown){
         console.error("The following error occured: "+ jqXHR.status +"-"+ textStatus + "-" + errorThrown );
-        if (jqXHR.status == 0 && jqXHR.readyState === 4) 
+        if (jqXHR.status == 0 && jqXHR.readyState === 4)
 		{
 			alert("Errore di connessione, impossibile inviare i dati al server "+ srv);
 		} else {
     	    alert("Error: "+jqXHR.status +"\nTextStatus: "+ textStatus + "\n Ready State "+jqXHR.readyState+"\n" + errorThrown );
 		}
 	});
-        
+
     return request;
 }
 
@@ -311,7 +311,7 @@ FUNCTION: CHANGE STATE (gui)
 function ChangeState(recid, from, to) {
 
   console.log("ChangeState: " + from + " --> " + to );
-  
+
   $("#"+from).css("display", "none");
   $("#"+to).css("display", "inline");
 
@@ -320,12 +320,12 @@ function ChangeState(recid, from, to) {
 
   if ( from == trx_startbut(recid) ) {
     $("#"+rs_inputstart(recid)).val( displayDate );
-	
+
     console.log("ChangeState: set "+rs_inputstart(recid)+ " to "+ displayDate )
   }
-  
+
   if ( from == trx_stopbut(recid) ) {
-    $("#"+rs_inputend(recid)).val( displayDate );  
+    $("#"+rs_inputend(recid)).val( displayDate );
     console.log("ChangeState: set '"+rs_inputend(recid)+ "' to "+ displayDate )
   }
 
