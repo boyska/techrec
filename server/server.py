@@ -70,8 +70,8 @@ class RecServer:
                         endtime=endtime )
                     )
 
-        return { "msg": "Nuova registrazione aggiunta", }
-        return self.rec_msg("Nuova registrazione creata! (id:" + ret.id *")")
+        return self.rec_msg("Nuova registrazione creata! (id:%d)" % ret.id,
+                id=ret.id)
 
     # @route('/active')
     def getactive(self):
@@ -112,8 +112,12 @@ class RecServer:
     """
         JSON' RESPONDER
     """
-    def rec_msg(self, msg): return {"message": msg, "status": True}
-    def rec_err(self, msg): return {"error": msg, "status": False}
+    def rec_msg(self, msg, **kwargs):
+        d = {"message": msg, "status": True}
+        d.update(kwargs)
+        return d
+    def rec_err(self, msg):
+        return {"error": msg, "status": False}
 
 
     """
