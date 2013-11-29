@@ -3,19 +3,19 @@ console.log("Loading...");
 function trx_startbut( code )  { return "startbutton-"+code; }
 function trx_stopbut( code )   { return "stopbutton-"+code; }
 function trx_downbut( code )   { return "downloadbutton-"+code; }
-function trx_endbut( code )		 { return "endbutton-"+code; }
+function trx_endbut( code )      { return "endbutton-"+code; }
 
 function trx_logarea( code )   { return "logarea-"+code; }
 
 function rs_button( code )     { return "button"+code; }
 
 function rs_trxarea( code )    { return "recarea-"+code; }
-function rs_trxname( code )    { return "name-"+code; }
+function rs_trxname( code )    { return "name"; }
 function rs_buttonarea( code ) { return "butarea-"+code; }
-function rs_inputstart( code ) { return "starttime-"+code; }
-function rs_inputend( code )   { return "endtime-"+code; }
+function rs_inputstart( code ) { return "starttime"; }
+function rs_inputend( code )   { return "endtime"; }
 function rs_formid(code)       { return "form-"+code; }
-function rs_dellink(code)		{ return "dellink-"+code;}
+function rs_dellink(code)       { return "dellink-"+code;}
 function rs_id(code)           { return code; }
 
 var txt_start       = "Inizia";
@@ -84,12 +84,12 @@ function rec_active( recid ) {
     request.done( function(data) {
         $.each(data, function(key, val) {
             console.log("Key " + key + " > VAL " + val );
-		    $("#"+trx_logarea( recid )).append( "Key " + key + " > VAL " + val + "<br>"  );
-		});
+            $("#"+trx_logarea( recid )).append( "Key " + key + " > VAL " + val + "<br>"  );
+        });
 
-    	console.log("Req OK: "+ data);
-	    // console.log("request"+ req);
-    	ChangeState(recid, trx_downbut(recid) , trx_endbut(recid));
+        console.log("Req OK: "+ data);
+        // console.log("request"+ req);
+        ChangeState(recid, trx_downbut(recid) , trx_endbut(recid));
     });
 }
 
@@ -101,7 +101,7 @@ function rec_new( )
 {
 
     var myDate = new Date()
-	console.log("New ID "+ myDate.getTime());
+    console.log("New ID "+ myDate.getTime());
     var recid = "rec-"+ myDate.getTime();
 
     console.log("[rec_new] New Rec " + recid);
@@ -127,27 +127,27 @@ function rec_new( )
     $("#"+rs_trxarea(recid)).append( "<div id=\""+trx_logarea(recid)+"\" class=\"logarea\"> Nuova trasmissione </div>" );
 
     // Bind the Delete Links
-	$("#"+rs_dellink(recid)).click(function(){
-		console.log("Remove " + rs_trxarea(recid) + "[ID"+recid+"]");
-		 // $("#"+rs_trxarea(recid)).remove();
-		recDelete (recid,rs_trxarea(recid));
+    $("#"+rs_dellink(recid)).click(function(){
+        console.log("Remove " + rs_trxarea(recid) + "[ID"+recid+"]");
+         // $("#"+rs_trxarea(recid)).remove();
+        recDelete (recid,rs_trxarea(recid));
     });
 
     // FORM SUBMIT: THE REC IS STOPPEND AND MUST BE PROCESSED
     $("#"+formid).submit(function(event){
- 		// Immediately, mark the end time (stop action)
-		ChangeState(recid, trx_downbut(recid) , trx_endbut(recid));
+        // Immediately, mark the end time (stop action)
+        ChangeState(recid, trx_downbut(recid) , trx_endbut(recid));
 
         // Force a Name
-		while (true) {
-	    	if ( $("#"+rs_trxname(recid)).val() == "" )
-			{
-				var tmpname = prompt("Nessun nome di trasmissione!!!");
-				$("#"+rs_trxname(recid)).val(tmpname);
-				$("#"+trx_logarea(recid)).append("Titolo: <b>"+ tmpname +"</b> <br/>");
-			}
-    		else { break; }
-		}
+        while (true) {
+            if ( $("#"+rs_trxname(recid)).val() == "" )
+            {
+                var tmpname = prompt("Nessun nome di trasmissione!!!");
+                $("#"+rs_trxname(recid)).val(tmpname);
+                $("#"+trx_logarea(recid)).append("Titolo: <b>"+ tmpname +"</b> <br/>");
+            }
+            else { break; }
+        }
 
         event.preventDefault();
 
@@ -171,7 +171,7 @@ function rec_new( )
     $("#"+trx_startbut(recid)).click( function(event){
 
         // Immediately, mark the start time (start action) and send it to Server
-		ChangeState(recid, trx_startbut(recid) , trx_stopbut(recid));
+        ChangeState(recid, trx_startbut(recid) , trx_stopbut(recid));
         event.preventDefault();
         recNew( recid );
 
@@ -216,17 +216,17 @@ function recNew ( recid ) {
     var request = RecAjax("create", dataString);
 
     request.done( function(data) {
-    	$.each(data, function(key, val) {
-      	    console.log("Received (K:V) ("+key+":"+val+")") ;
-      	    if (key == "msg") {
-    			$("#"+trx_logarea(recid)).html("Nuova Registrazione </br> (recid:"+recid+") </br>");
-    			$("#"+trx_logarea(recid)).append("Inizio: "+ $("#"+rs_inputstart(recid)).val() +"<br/>");
-      	    }
-			if (key == "error") {
-    			$("#"+trx_logarea( recid )).html("Errore: impossibile creare una nuova registrazione"+val+" </ br>");
-      	    }
+        $.each(data, function(key, val) {
+            console.log("Received (K:V) ("+key+":"+val+")") ;
+            if (key == "msg") {
+                $("#"+trx_logarea(recid)).html("Nuova Registrazione </br> (recid:"+recid+") </br>");
+                $("#"+trx_logarea(recid)).append("Inizio: "+ $("#"+rs_inputstart(recid)).val() +"<br/>");
+            }
+            if (key == "error") {
+                $("#"+trx_logarea( recid )).html("Errore: impossibile creare una nuova registrazione"+val+" </ br>");
+            }
 
-		});
+        });
     } );
     return request;
 }
@@ -240,42 +240,40 @@ function recUpdate( recid  ) {
     //event.preventDefault();
     var request = RecAjax("update", dataString );
     request.done( function(data) {
-    	$.each(data, function(key, val) {
-          	console.log("recUpdate receive (k:v) ("+key+":"+val+")" );
+        $.each(data, function(key, val) {
+            console.log("recUpdate receive (k:v) ("+key+":"+val+")" );
 
-          	if (key == "message") {
-          	    var str = "";
-          	    str += "<b>RecID</b> "+ recid + "</br>"
-          	    str += "<b>nome</b> "+ $("#"+rs_trxname(recid)).val() + "</br>"
-          	    str += "<b>Inizio</b> "+ $("#"+rs_inputstart(recid)).val() + "</br>"
-          	    str += "<b>Fine</b> "+ $("#"+rs_inputend(recid)).val() + "</br>"
+            if (key == "message") {
+                var str = "";
+                str += "<b>RecID</b> "+ recid + "</br>"
+                str += "<b>nome</b> "+ $("#"+rs_trxname(recid)).val() + "</br>"
+                str += "<b>Inizio</b> "+ $("#"+rs_inputstart(recid)).val() + "</br>"
+                str += "<b>Fine</b> "+ $("#"+rs_inputend(recid)).val() + "</br>"
 
-			    $("#"+trx_logarea(recid)).html( str );
+                $("#"+trx_logarea(recid)).html( str );
                 // if all elements have been recorded
                 if ($("#"+rs_trxname(recid)).val() != "") {
                     $("#"+trx_logarea(recid)).append( "<b>In Elaborazione</b>" );
                 }
-        	}
+            }
 
-          	if (key == "error") {
-        		$("#"+trx_logarea( recid )).append( "Error:" + val +"<br>"  );
-		    }
-    	}); // end of each
+            if (key == "error") {
+                $("#"+trx_logarea( recid )).append( "Error:" + val +"<br>"  );
+            }
+        }); // end of each
     }); // end of request.done
 }
 
 /*
  *
- * 	AJAX REQUEST
+ *  AJAX REQUEST
  *
  */
 function RecAjax(apipath, dataString ) {
-
-   	var srv = srvaddr + apipath ;
-
+    var srv = srvaddr + "api/" + apipath ;
     var request = $.ajax({
         type: "POST",
-		cache: false,
+        cache: false,
         url: srv,
         data: dataString,
         dataType: "json"
@@ -284,25 +282,25 @@ function RecAjax(apipath, dataString ) {
     request.fail(function (jqXHR, textStatus, errorThrown){
         console.error("The following error occured: "+ jqXHR.status +"-"+ textStatus + "-" + errorThrown );
         if (jqXHR.status == 0 && jqXHR.readyState === 4)
-		{
-			alert("Errore di connessione, impossibile inviare i dati al server "+ srv);
-		} else {
-    	    alert("Error: "+jqXHR.status +"\nTextStatus: "+ textStatus + "\n Ready State "+jqXHR.readyState+"\n" + errorThrown );
-		}
-	});
+        {
+            alert("Errore di connessione, impossibile inviare i dati al server "+ srv);
+        } else {
+            alert("Error: "+jqXHR.status +"\nTextStatus: "+ textStatus + "\n Ready State "+jqXHR.readyState+"\n" + errorThrown );
+        }
+    });
 
     return request;
 }
 
 /*
- * 	GetNow (data parser)
+ *  GetNow (data parser)
  */
 function getnow()
 {
     var myDate = new Date()
     var displayDate = myDate.getFullYear() + '/' + (myDate.getMonth()+1) + '/' + myDate.getDate();
     displayDate = displayDate +' '+ myDate.getHours()+':'+myDate.getMinutes()+':'+myDate.getSeconds();
-	return displayDate;
+    return displayDate;
 }
 
 /*
@@ -330,9 +328,9 @@ function ChangeState(recid, from, to) {
   }
 
   if ( from == trx_downbut(recid) ) {
-	$("input[type=submit]").attr("disabled", "disabled");
+    $("input[type=submit]").attr("disabled", "disabled");
     console.log("ChangeState: set '"+rs_inputend(recid)+ "' to "+ displayDate );
   }
 } // End function ChangeState
 
-
+// vim: set ts=4 sw=4 et:

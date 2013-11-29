@@ -8,7 +8,7 @@ $(document).ready(function(){
 		function (event) {
 			event.preventDefault();
 			dataString = $(this).serialize();
-			var request = $.getJSON('/search', dataString);
+			var request = $.getJSON('/api/search', dataString);
 
 			$("#searchresult").html(" ");
 			request.done( function(data) {
