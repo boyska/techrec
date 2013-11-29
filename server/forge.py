@@ -41,13 +41,37 @@ def get_files_and_intervals(start, end, rounder=round_timefile):
         start = begin + timedelta(hours=1)
 
 
-def mp3_join(named_intervals):
+def mp3_join(named_intervals, target):
     '''
     Note that these are NOT the intervals returned by get_files_and_intervals,
     as they do not supply a filename, but only a datetime.
     What we want in input is basically the same thing, but with get_timefile()
     applied on the first element
+
+    This function make the (quite usual) assumption that the only start_cut (if
+    any) is at the first file, and the last one is at the last file
     '''
+    ffmpeg = 'ffmpeg'  # binary name
+    startskip = None
+    endskip = None
+    files = []
     for (filename, start_cut, end_cut) in named_intervals:
-        pass
-    raise NotImplementedError()
+        # this happens only one time, and only at the first iteration
+        if start_cut:
+            assert startskip is None
+            startskip = start_cut
+        # this happens only one time, and only at the first iteration
+        if end_cut:
+            assert endskip is None
+            endskip = end_cut
+        assert '|' not in filename
+        files.append(filename)
+
+    cmdline = [ffmpeg, '-i', 'concat:%s' % '|'.join(files), '-codec:a',
+               'copy']
+    if startskip is not None:
+        cmdline += ['-ss', str(startskip)]
+    if endskip is not None:
+        cmdline += ['-to', str(len(files)*3600 - endskip)]
+    cmdline += [target]
+    return cmdline

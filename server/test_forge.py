@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from nose.tools import raises, assert_items_equal, eq_
 
 from forge import get_files_and_intervals, get_timefile_exact, round_timefile,\
-    get_timefile
+    get_timefile, mp3_join
 
 eight = datetime(2014, 5, 30, 20)
 nine = datetime(2014, 5, 30, 21)
@@ -152,3 +152,35 @@ def test_intervals_left_2():
     eq_(res[0][2], 0)
     eq_(res[1][1], 0)
     eq_(res[1][2], 3599)
+
+# MP3 Join
+
+
+def test_mp3_1():
+    eq_(' '.join(mp3_join((('a', 0, 0),), 'foo.mp3')),
+        'ffmpeg -i concat:a -codec:a copy foo.mp3')
+
+
+def test_mp3_1_left():
+    eq_(' '.join(mp3_join((('a', 160, 0),), 'foo.mp3')),
+        'ffmpeg -i concat:a -codec:a copy -ss 160 foo.mp3')
+
+
+def test_mp3_1_right():
+    eq_(' '.join(mp3_join((('a', 0, 1600),), 'foo.mp3')),
+        'ffmpeg -i concat:a -codec:a copy -to 2000 foo.mp3')
+
+
+def test_mp3_1_leftright():
+    eq_(' '.join(mp3_join((('a', 160, 1600),), 'foo.mp3')),
+        'ffmpeg -i concat:a -codec:a copy -ss 160 -to 2000 foo.mp3')
+
+
+def test_mp3_2():
+    eq_(' '.join(mp3_join((('a', 0, 0), ('b', 0, 0)), 'foo.mp3')),
+        'ffmpeg -i concat:a|b -codec:a copy foo.mp3')
+
+
+def test_mp3_2_leftright():
+    eq_(' '.join(mp3_join((('a', 1000, 0), ('b', 0, 1600)), 'foo.mp3')),
+        'ffmpeg -i concat:a|b -codec:a copy -ss 1000 -to 5600 foo.mp3')
