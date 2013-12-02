@@ -1,0 +1,33 @@
+.centerscreen-container {
+	display: table;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
+	position: fixed;
+}
+.centerscreen-inner {
+	text-align: center;
+	vertical-align: middle;
+	display: table-cell;
+}
+
+.pure-button-enorme {
+	font-size: 300%;
+}
+.arancione {
+	color: darkorange;
+}
+.ongoing-all {
+	background: #eeeeee;
+	border-radius: 2em;
+}
+.ongoing-one {
+	margin: 1em;
+}
+.ongoing-one:nth-child(even) {
+	background: #cccccc;
+}
+.ongoing-one:nth-child(odd) {
+	background: #dddddd;
+}

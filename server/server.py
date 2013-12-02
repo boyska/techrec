@@ -6,6 +6,8 @@ from bottle import Bottle, request, static_file, redirect, abort
 
 from techrec import Rec, RecDB
 from processqueue import get_process_queue, simulate_long_job
+from config_manager import get_config
+
 
 class RecServer:
     def __init__(self):
@@ -13,7 +15,6 @@ class RecServer:
         self._route()
 
         self.db = RecDB()
-
 
     def _route(self):
         ### This is the API part of the app
@@ -30,6 +31,9 @@ class RecServer:
         self._app.route('/api/jobs/<job_id:int>', callback=self.check_job)
 
         ## Static part of the site
+        self._app.route('/output/<filepath:path>',
+                        callback=lambda filepath:
+                        static_file(filepath, root=get_config()['OUTPUT_DIR']))
         self._app.route('/static/<filepath:path>',
                         callback=lambda filepath: static_file(filepath,
                                                               root='static/'))
@@ -46,28 +50,21 @@ class RecServer:
         ret = {}
         print "Server:: Create request %s " % req
 
-        starttime = ""
-        if req["starttime"] != "":
-            starttime = datetime.strptime(req["starttime"],
-                                          "%Y/%m/%d %H:%M:%S")
-
+        starttime = datetime.now()
+        recid = starttime.strftime('%s')  # unix timestamp
+        name = ""
         endtime = datetime.now()
-        if req["endtime"] != "":
-            endtime = datetime.strptime(req["endtime-"+req["recid"]],
-                                        "%Y/%m/%d %H:%M:%S")
-        print "Name %s RECID %s Starttime %s EndTime %s" %\
-              (req["name"], req["recid"], starttime, endtime)
-        ret = self.db.add(Rec(name=req["name"],
-                              recid=req["recid"],
-                              starttime=starttime,
-                              endtime=endtime)
-                          )
+
+        print "RECID %s Starttime %s EndTime %s" %\
+              (recid, starttime, endtime)
+        rec = Rec(name=name,
+                  recid=recid,
+                  starttime=starttime,
+                  endtime=endtime)
+        ret = self.db.add(rec)
 
         return self.rec_msg("Nuova registrazione creata! (id:%d)" % ret.id,
-                            id=ret.id)
-
-    def getactive(self):
-        print "GetActive"
+                            rec=rec.serialize())
 
     def delete(self, recid=None):
         req = dict(request.POST.allitems())
@@ -83,19 +80,28 @@ class RecServer:
     def update(self):
         req = dict(request.POST.allitems())
 
-        ret = {}
-        ret["starttime"] = req["starttime"]
-        ret["endtime"] = req["endtime"]
-        ret["name"] = req["name"]
+        newrec = {}
+        if 'starttime' not in req:
+            newrec['starttime'] = int(datetime.now().strftime('%s'))
+        else:
+            newrec['starttime'] = int(req['starttime'])
+        if "endtime" not in req:
+            newrec['endtime'] = int(datetime.now().strftime('%s'))
+        else:
+            newrec['endtime'] = int(req['endtime'])
 
-        if not self.db.update(req["recid"], ret):
+        newrec["name"] = req["name"] if 'name' in req else ''
+
+        # TODO: il filename va dentro al db!
+        if not self.db.update(req["recid"], newrec):
             return self.rec_err("Errore Aggiornamento")
-        req['filename'] = 'ror-%s-%s' % (req['recid'], req['name'])
+        req['filename'] = 'ror-%s-%s' % (req['recid'], newrec['name'])
 
         # TODO: real ffmpeg job!
         job_id = get_process_queue().submit(simulate_long_job, **req)
         print "SUBMITTED: %d" % job_id
-        return self.rec_msg("Aggiornamento completato!", job_id=job_id)
+        return self.rec_msg("Aggiornamento completato!", job_id=job_id,
+                            result='/output/' + req['filename'])
 
     def check_job(self, job_id):
         try:
@@ -124,45 +130,20 @@ class RecServer:
         res['running'] = get_process_queue().jobs.keys()
         return res
 
-
     def search(self, args=None):
-        if request.method == 'GET':
-            req  = dict( request.GET.allitems() )
-        else:
-            req  = dict( request.POST.allitems() )
+        req = dict()
+        req.update(request.GET.allitems())
         print "Search request: %s" % (req)
 
-        name = "%s" % req["name"]
-        if req["name"] == "": name = None
+        values = self.db._search(**req)
+        from pprint import pprint
+        print "Returned Values %s" % pprint([r.serialize() for r in values])
 
-        starttime = req["starttime"]
-        if req["starttime"] == "": starttime = None
-
-        endtime = req["endtime"]
-        if req["endtime"] == "": endtime = None
-
-        recid = req["recid"]
-        if req["recid"]== "": recid = None
-
-        active = True
-
-        values =  self.db._search(recid=recid,name=name, starttime=starttime, endtime=endtime,active=active)
-        print "Returned Values %s" % values
         ret = {}
         for rec in values:
-            recid = "rec-" + str(rec.id)
+            ret[rec.recid] = rec.serialize()
 
-            ret [recid] = {}
-            ret [recid]["name"] = rec.name
-            ret [recid]["id"] = rec.id
-            ret [recid]["recid"] = rec.recid
-            ret [recid]["starttime"] = rec.starttime.strftime("%Y-%m-%d-%H-%H-%s")
-            if rec.endtime != None:
-                ret [recid]["endtime"] = rec.endtime.strftime("%Y-%m-%d-%H-%H-%s")
-
-            ret [recid]["active"] =  rec.active
-
-        logging.info("Return: %s" % ret);
+        logging.info("Return: %s" % ret)
         return ret
 
     # @route('/help')
@@ -190,5 +171,6 @@ class RecServer:
 
 
 if __name__ == "__main__":
+    get_config().from_pyfile("default_config.py")
     c = RecServer()
     c._app.run(host="localhost", port="8000", debug=True, reloader=True)

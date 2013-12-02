@@ -1,52 +1,52 @@
 <!DOCTYPE html>
-
 <html>
+
 <head>
+	<title>TechREC</title>
+	<link rel="icon" href="/static/img/icon.ico" />
+	<link rel="stylesheet" type="text/css" href="/static/css/pure-min.css" />
+	<!--link rel="stylesheet" type="text/css" href="/static/css/style.css"-->
+	<link rel="stylesheet" type="text/css" href="/static/css/techrec.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/font-awesome.css" />
 
-<title> TechREC </title>
-<link rel="icon" href="/static/img/icon.ico" />
-<link rel="stylesheet" type="text/css" href="/static/css/style.css">
-
-<script src="/static/js/jquery-1.9.1.min.js"></script>
-<script type="text/javascript" src="/static/js/reclibrary.js"></script>
-
-<script>
-
-$(document).ready(function(){
-
-    $("#newlink").click( function(){
-        rec_new();
-    });
-
-    //rec_active();
-    rec_new();
-
-});
-
-</script>
-
+	<script src="/static/js/jquery-1.9.1.min.js"></script>
+	<script src="/static/js/jquery-ui.min.js"></script>
+	<script src="/static/js/jquery.ui.datepicker-it.min.js"></script>
+	<script src="/static/js/new.js"></script>
 </head>
 
 <body>
 
-<div id="pagecontainer">
-
-    <h1> techr*c </h1>
-
-    <h2>
-        <a href="#" id="newlink">+ nuova registrazione</a> <br />
-        <a href="/tempo.html"> macchina del tempo</a>
-    </h2>
-
-    <div id="buttonscontainer"> </div>
-
-    <div id="addnewrecarea"> </div>
-
+<div id="rec-inizia" class="centerscreen-container"> <!-- responsive grid -->
+	<div class="centerscreen-inner">
+		<button class="pure-button pure-button-enorme add-new-rec">
+			<i class="fa fa-circle arancione"></i>
+			<span class="pure-button-inizia">Inizia</span>
+		</button>
+	</div>
 </div>
 
-<div id="footer">
-  techbl*c
+<div id="rec-normal" class="pure-g-r" style="display: none;">
+	<div class="pure-u-2-3"></div>
+	<div class="pure-u-1-3" style="text-align: center;">
+		<button class="pure-button pure-button-xlarge add-new-rec"
+			style="margin: 1em;">
+			<i class="fa fa-plus"></i> Aggiungi nuova
+		</button>
+	</div>
+
+	<div class="pure-u-1-8"></div>
+	<div class="pure-u-3-4">
+		<table width="100%" class="pure-table pure-table-horizontal pure-table-striped"
+			id="ongoing-recs-table" style="margin-top: 3em;">
+			<tbody>
+			</tbody>
+		</table>
+	</div>
+	<div class="pure-u-1-8"></div>
 </div>
 
 </body>
 </html>
+
+<!-- vim: set ts=2 sw=2 noet: -->
