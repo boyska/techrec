@@ -13,6 +13,7 @@ var config = {
 $.widget("ror.countclock", {
 	options: {
 		since: null,
+		to: null
 	},
 	_create: function() {
 		console.log("create");
@@ -25,9 +26,17 @@ $.widget("ror.countclock", {
 	},
 	_update: function() {
 		if(this.options.since !== null) {
-			this.element.text("Registrando da " +
-				config.datetimeformat(this.options.since)
-				);
+			if(this.options.to === null) {
+				this.element.text("Registrando da " +
+					config.datetimeformat(this.options.since)
+					);
+			} else {
+				this.element.text("Registrando da " +
+					config.datetimeformat(this.options.since) +
+					" a " + 
+					config.datetimeformat(this.options.to)
+					);
+			}
 		} else {
 			this.element.text('');
 		}
@@ -86,8 +95,11 @@ $.widget("ror.ongoingrec", {
 	_update: function() {
 		var rec = this.options.rec;
 		this.element.find('input').val(rec.name);
-		this.element.find('.ongoingrec-time').countclock("option", "since",
+		this.element.find(':ror-countclock').countclock("option", "since",
 				rec.starttime !== null ? new Date(rec.starttime*1000) : null
+				);
+		this.element.find(':ror-countclock').countclock("option", "to", 
+				rec.endtime !== null ? new Date(rec.endtime*1000) : null
 				);
 			
 		switch(this.options.state) {
@@ -159,6 +171,7 @@ function stop_rec(rec, widget) {
 			console.error(res_update.status);
 			return;
 		}
+		widget.option("rec", res_update.rec);
 		$.ajax('/api/generate', {
 			method: 'POST',
 			data: { 'recid': rec.recid }
