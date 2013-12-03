@@ -154,23 +154,28 @@ function stop_rec(rec, widget) {
 		dataType: 'json',
 		data: data
 	});
-	xhr.done(function(res) {
-		if(res.status !== true) {
-			console.error(res.status);
+	xhr.done(function(res_update) {
+		if(res_update.status !== true) {
+			console.error(res_update.status);
 			return;
 		}
-		//TODO: start polling on res.job_id
-		widget.option("state", 1);
-		poll_job(res.job_id, function(data) {
-			if(data.job_status !== 'DONE') {
-				console.error("Job failed!", data);
-			} else {
-				widget.option("state", 2);
-				widget.option("filename", res.result);
-			}
+		$.ajax('/api/generate', {
+			method: 'POST',
+			data: { 'recid': rec.recid }
+		}).done(function(res_gen) {
+			//TODO: start polling on res.job_id
+			widget.option("state", 1);
+			poll_job(res_gen.job_id, function(data) {
+				if(data.job_status !== 'DONE') {
+					console.error("Job failed!", data);
+				} else {
+					widget.option("filename", res_gen.result);
+					widget.option("state", 2);
+				}
+			});
 		});
+		return xhr;
 	});
-	return xhr;
 }
 
 function show_ongoing(ongoing_recs) {

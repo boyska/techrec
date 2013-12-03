@@ -1,5 +1,7 @@
+import os
 from datetime import datetime
 import logging
+logger = logging.getLogger('server')
 from functools import partial
 
 from bottle import Bottle, request, static_file, redirect, abort, response
@@ -8,6 +10,21 @@ from techrec import Rec, RecDB
 from processqueue import get_process_queue
 from forge import create_mp3
 from config_manager import get_config
+
+
+def date_read(s):
+    return datetime.fromtimestamp(int(s))
+
+
+def date_write(dt):
+    return dt.strftime('%s')
+
+
+def rec_sanitize(rec):
+    d = rec.serialize()
+    d['starttime'] = date_write(d['starttime'])
+    d['endtime'] = date_write(d['endtime'])
+    return d
 
 
 class DateApp(Bottle):
@@ -59,6 +76,7 @@ class RecServer:
         self._app.route('/api/create', method="POST", callback=self.create)
 
         self._app.route('/api/update', method="POST", callback=self.update)
+        self._app.route('/api/generate', method="POST", callback=self.generate)
         self._app.route('/api/search', callback=self.search)
         self._app.route('/api/delete', method="POST", callback=self.delete)
         self._app.route('/api/jobs', callback=self.running_jobs)
@@ -98,7 +116,7 @@ class RecServer:
         ret = self.db.add(rec)
 
         return self.rec_msg("Nuova registrazione creata! (id:%d)" % ret.id,
-                            rec=rec.serialize())
+                            rec=rec_sanitize(rec))
 
     def delete(self, recid=None):
         req = dict(request.POST.allitems())
@@ -115,31 +133,51 @@ class RecServer:
         req = dict(request.POST.allitems())
 
         newrec = {}
+        now = datetime.now()
         if 'starttime' not in req:
-            newrec['starttime'] = int(datetime.now().strftime('%s'))
+            newrec['starttime'] = now
         else:
-            newrec['starttime'] = int(req['starttime'])
+            newrec['starttime'] = date_read(req['starttime'])
         if "endtime" not in req:
-            newrec['endtime'] = int(datetime.now().strftime('%s'))
+            newrec['endtime'] = now
         else:
-            newrec['endtime'] = int(req['endtime'])
+            newrec['endtime'] = date_read(req['endtime'])
 
         newrec["name"] = req["name"] if 'name' in req else ''
 
-        # TODO: il filename va dentro al db!
-        if not self.db.update(req["recid"], newrec):
-            return self.rec_err("Errore Aggiornamento")
-        req['filename'] = 'ror-%s-%s' % (req['recid'], newrec['name'])
+        try:
+            logger.info("prima di update")
+            result_rec = self.db.update(req["recid"], newrec)
+            logger.info("dopo update")
+        except Exception as exc:
+            return self.rec_err("Errore Aggiornamento", exception=exc)
+        return self.rec_msg("Aggiornamento completato!",
+                            rec=rec_sanitize(result_rec))
 
+    def generate(self):
+        # prendiamo la rec in causa
+        recid = dict(request.POST.allitems())['recid']
+        rec = self.db._search(recid=recid)[0]
+        #TODO: manca il prefisso!
+        if rec.filename is not None and os.path.filename.exists(rec.filename):
+            return {'status': 'ready',
+                    'message': 'The file has already been generated at %s' %
+                    rec.filename,
+                    'rec': rec
+                    }
+        rec.filename = 'ror-%s-%s' % (rec.recid, rec.name)
+        self.db.update(rec.recid, rec.serialize())
         # TODO: real ffmpeg job!
         job_id = get_process_queue().submit(
             create_mp3,
-            start=datetime.fromtimestamp(newrec['starttime']),
-            end=datetime.fromtimestamp(newrec['endtime']),
-            outfile=req['filename'])
+            start=rec.starttime,
+            end=rec.endtime,
+            outfile=rec.filename)
         print "SUBMITTED: %d" % job_id
-        return self.rec_msg("Aggiornamento completato!", job_id=job_id,
-                            result='/output/' + req['filename'])
+        return self.rec_msg("Aggiornamento completato!",
+                            job_id=job_id,
+                            result='/output/' + rec.filename,
+                            rec=rec_sanitize(rec))
 
     def check_job(self, job_id):
         try:
@@ -177,7 +215,8 @@ class RecServer:
 
         values = self.db._search(**req)
         from pprint import pprint
-        print "Returned Values %s" % pprint([r.serialize() for r in values])
+        logger.debug("Returned Values %s" %
+                     pprint([r.serialize() for r in values]))
 
         ret = {}
         for rec in values:
@@ -201,13 +240,13 @@ class RecServer:
         <h3>Not implemented.</h3>"
 
     # JSON UTILS
-    def rec_msg(self, msg, **kwargs):
-        d = {"message": msg, "status": True}
+    def rec_msg(self, msg, status=True, **kwargs):
+        d = {"message": msg, "status": status}
         d.update(kwargs)
         return d
 
-    def rec_err(self, msg):
-        return {"error": msg, "status": False}
+    def rec_err(self, msg, **kwargs):
+        return self.rec_msg(msg, status=False, **kwargs)
 
 
 if __name__ == "__main__":
