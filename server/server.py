@@ -5,7 +5,8 @@ from functools import partial
 from bottle import Bottle, request, static_file, redirect, abort
 
 from techrec import Rec, RecDB
-from processqueue import get_process_queue, simulate_long_job
+from processqueue import get_process_queue
+from forge import create_mp3
 from config_manager import get_config
 
 
@@ -98,7 +99,11 @@ class RecServer:
         req['filename'] = 'ror-%s-%s' % (req['recid'], newrec['name'])
 
         # TODO: real ffmpeg job!
-        job_id = get_process_queue().submit(simulate_long_job, **req)
+        job_id = get_process_queue().submit(
+            create_mp3,
+            start=datetime.fromtimestamp(newrec['starttime']),
+            end=datetime.fromtimestamp(newrec['endtime']),
+            outfile=req['filename'])
         print "SUBMITTED: %d" % job_id
         return self.rec_msg("Aggiornamento completato!", job_id=job_id,
                             result='/output/' + req['filename'])
@@ -121,7 +126,9 @@ class RecServer:
                     res = job.get()
                     return res
                 except Exception as exc:
-                    return ret('FAILED')
+                    r = ret('FAILED')
+                    r['exception'] = str(exc)
+                    return r
             return ret('WIP')
 
     def running_jobs(self):

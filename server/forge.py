@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from subprocess import Popen
 
 
 def get_timefile_exact(time):
@@ -74,4 +75,16 @@ def mp3_join(named_intervals, target):
     if endskip is not None:
         cmdline += ['-to', str(len(files)*3600 - endskip)]
     cmdline += [target]
+    cmdline += ['-loglevel', 'warning']
     return cmdline
+
+
+def create_mp3(start, end, outfile, options={}, **kwargs):
+    p = Popen(mp3_join([(get_timefile(begin), start_cut, end_cut)
+                           for begin, start_cut, end_cut
+                           in get_files_and_intervals(start, end)],
+                          outfile))
+    p.wait()
+    if p.returncode != 0:
+        raise OSError("return code was %d" % p.returncode)
+    return True
