@@ -1,7 +1,7 @@
 /*global $*/
 //TODO: move to a separate file(?)
 var config = {
-	//TODO: create a dedicate widget for pretty date/clock
+	polling_interval: 500,
 	datetimeformat: function(d) {
 		if(Math.abs(new Date() - d) > (3*60*60*1000)) {
 			return d.toLocaleString();
@@ -38,6 +38,7 @@ $.widget("ror.ongoingrec", {
 	options: {
 		rec: null,
 	state: 0,
+	filename: null,
 	/*0 = ongoing, 1 = encoding, 2 = ready to download*/
 	},
 	_create: function() {
@@ -52,7 +53,7 @@ $.widget("ror.ongoingrec", {
 				$('<input/>').attr('placeholder', 'Nome trasmissione')
 				)
 			).append( $('<td class="ongoingrec-time"/>').countclock()).append(
-				$('<td/>').append($('<button/>')
+				$('<td/>').append($('<a/>')
 					.addClass('pure-button pure-button-large'))
 				);
 
@@ -75,6 +76,11 @@ $.widget("ror.ongoingrec", {
 	},
 	_setOption: function(key, value) {
 		this.options[key] = value;
+		if(key === 'state') {
+			if(value < 2) {
+				this.options.filename = null;
+			}
+		}
 		this._update();
 	},
 	_update: function() {
@@ -86,24 +92,39 @@ $.widget("ror.ongoingrec", {
 			
 		switch(this.options.state) {
 			case 0:
-				this.element.find('button').removeClass('pure-button-disabled rec-encoding rec-download')
+				this.element.find('a').removeClass('pure-button-disabled rec-encoding rec-download')
 					.addClass("rec-stop").html(
 							$('<i/>').addClass('fa fa-stop')).append(' Stop');
 				break;
 			case 1:
-				this.element.find('button').removeClass('rec-stop rec-download')
+				this.element.find('a').removeClass('rec-stop rec-download')
 					.addClass("pure-button-disabled rec-encoding").html(
 							$('<i/>').addClass('fa fa-clock-o')).append(' Aspetta');
 				break;
 			case 2:
-				this.element.find('button').removeClass('pure-button-disabled rec-stop rec-encoding')
-					.addClass("rec-download").html(
-							$('<i/>').addClass('fa fa-download').css('color', 'green')
-							).append(' Scarica');
+				this.element.find('a').removeClass('pure-button-disabled rec-stop rec-encoding')
+					.addClass("rec-download")
+					.prop('href', this.options.filename)
+					.html(
+							$('<i/>').addClass('fa fa-download').css('color',
+								'green')).append(' Scarica');
 				break;
 		}
 	}
 });
+
+function poll_job(job_id, callback) {
+	$.getJSON('/api/jobs/' + job_id)
+		.done(function(data) {
+			if(data.job_status !== 'WIP') {
+				console.log("polling completed for job[" + job_id + "]", data);
+				callback(data);
+			} else {
+				setTimeout(function() { poll_job(job_id, callback); },
+					config.polling_interval);
+			}
+		});
+}
 
 function add_new_rec() {
 	//progress()
@@ -140,6 +161,14 @@ function stop_rec(rec, widget) {
 		}
 		//TODO: start polling on res.job_id
 		widget.option("state", 1);
+		poll_job(res.job_id, function(data) {
+			if(data.job_status !== 'DONE') {
+				console.error("Job failed!", data);
+			} else {
+				widget.option("state", 2);
+				widget.option("filename", res.result);
+			}
+		});
 	});
 	return xhr;
 }
