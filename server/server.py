@@ -2,12 +2,45 @@ from datetime import datetime
 import logging
 from functools import partial
 
-from bottle import Bottle, request, static_file, redirect, abort
+from bottle import Bottle, request, static_file, redirect, abort, response
 
 from techrec import Rec, RecDB
 from processqueue import get_process_queue
 from forge import create_mp3
 from config_manager import get_config
+
+
+class DateApp(Bottle):
+    '''
+    This application will expose some date-related functions; it is intended to
+    be used when you need to know the server's time on the browser
+    '''
+    def __init__(self):
+        Bottle.__init__(self)
+        self.route('/help', callback=self.help)
+        self.route('/date', callback=self.date)
+        self.route('/custom', callback=self.custom)
+
+    def date(self):
+        n = datetime.now()
+        return {
+            'unix': n.strftime('%s'),
+            'isoformat': n.isoformat(),
+            'ctime': n.ctime()
+        }
+
+    def custom(self):
+        n = datetime.now()
+        if 'strftime' not in request.query:
+            abort(400, 'Need argument "strftime"')
+        response.content_type = 'text/plain'
+        return n.strftime(request.query['strftime'])
+
+    def help(self):
+        response.content_type = 'text/plain'
+        return \
+            '/date : get JSON dict containing multiple formats of now()\n' + \
+            '/custom?strftime=FORMAT : get now().strftime(FORMAT)'
 
 
 class RecServer:
@@ -180,4 +213,5 @@ class RecServer:
 if __name__ == "__main__":
     get_config().from_pyfile("default_config.py")
     c = RecServer()
+    c._app.mount('/date', DateApp())
     c._app.run(host="localhost", port="8000", debug=True, reloader=True)
