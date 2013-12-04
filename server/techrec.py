@@ -58,8 +58,8 @@ class Rec(Base):
 
 
 class RecDB:
-    def __init__(self):
-        self.engine = create_engine('sqlite:///techrec.db', echo=False)
+    def __init__(self, uri):
+        self.engine = create_engine(uri, echo=False)
         self.conn = self.engine.connect()
 
         logging.getLogger('sqlalchemy.engine').setLevel(logging.FATAL)
@@ -186,9 +186,6 @@ if __name__ == "__main__":
     _endtime = datetime(2014,05,24,17,45,17)
 
     a = Rec(name="Mimmo1", starttime=_mytime, endtime=_endtime)
-    j = RecJob( a )
-    print (j)
-    j.extract()
     printall( db._search() )
     sys.exit("End test job")
 

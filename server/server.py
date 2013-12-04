@@ -65,7 +65,7 @@ class RecServer:
         self._app = Bottle()
         self._route()
 
-        self.db = RecDB()
+        self.db = RecDB(get_config()['DB_URI'])
 
     def _route(self):
         ### This is the API part of the app
@@ -172,7 +172,7 @@ class RecServer:
             create_mp3,
             start=rec.starttime,
             end=rec.endtime,
-            outfile=rec.filename)
+            outfile=os.path.join(get_config()['AUDIO_OUTPUT'], rec.filename))
         print "SUBMITTED: %d" % job_id
         return self.rec_msg("Aggiornamento completato!",
                             job_id=job_id,
@@ -250,8 +250,21 @@ class RecServer:
 
 
 if __name__ == "__main__":
+    configs = ['default_config.py']
+    if 'TECHREC_CONFIG' in os.environ:
+        for conf in os.environ['TECHREC_CONFIG'].split(':'):
+            if not conf:
+                continue
+            path = os.path.realpath(conf)
+            if not os.path.exists(path):
+                logger.warn("Configuration file '%s' does not exist; skipping"
+                            % path)
+                continue
+            configs.append(path)
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
-    get_config().from_pyfile("default_config.py")
+    for conf in configs:
+        get_config().from_pyfile(conf)
     c = RecServer()
     c._app.mount('/date', DateApp())
-    c._app.run(host="localhost", port="8000", debug=True)
+    c._app.run(host=get_config()['HOST'], port=get_config()['PORT'],
+            debug=get_config()['DEBUG'])
