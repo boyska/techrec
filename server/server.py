@@ -250,7 +250,8 @@ class RecServer:
 
 
 if __name__ == "__main__":
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
     get_config().from_pyfile("default_config.py")
     c = RecServer()
     c._app.mount('/date', DateApp())
-    c._app.run(host="localhost", port="8000", debug=True, reloader=True)
+    c._app.run(host="localhost", port="8000", debug=True)
