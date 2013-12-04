@@ -85,7 +85,7 @@ class RecServer:
         ## Static part of the site
         self._app.route('/output/<filepath:path>',
                         callback=lambda filepath:
-                        static_file(filepath, root=get_config()['OUTPUT_DIR']))
+                        static_file(filepath, root=get_config()['AUDIO_OUTPUT']))
         self._app.route('/static/<filepath:path>',
                         callback=lambda filepath: static_file(filepath,
                                                               root='static/'))
