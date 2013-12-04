@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta
+import os.path
 from subprocess import Popen
+
+from config_manager import get_config
 
 
 def get_timefile_exact(time):
@@ -7,7 +10,10 @@ def get_timefile_exact(time):
     time is of type `datetime`; it is not "rounded" to match the real file;
     that work is done in get_timefile(time)
     '''
-    return time.strftime('%Y-%m/%d/rec-%Y-%m-%d-%H-%M-%S-ror.mp3')
+    return os.path.join(
+        get_config()['AUDIO_INPUT'],
+        time.strftime('%Y-%m/%d/rec-%Y-%m-%d-%H-%M-%S-ror.mp3')
+        )
 
 
 def round_timefile(exact):
