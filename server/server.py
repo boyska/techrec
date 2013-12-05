@@ -142,8 +142,8 @@ class RecServer:
             newrec['endtime'] = now
         else:
             newrec['endtime'] = date_read(req['endtime'])
-
-        newrec["name"] = req["name"] if 'name' in req else ''
+        if 'name' in req:
+            newrec["name"] = req["name"]
 
         try:
             logger.info("prima di update")
@@ -158,16 +158,14 @@ class RecServer:
         # prendiamo la rec in causa
         recid = dict(request.POST.allitems())['recid']
         rec = self.db._search(recid=recid)[0]
-        #TODO: manca il prefisso!
         if rec.filename is not None and os.path.filename.exists(rec.filename):
             return {'status': 'ready',
                     'message': 'The file has already been generated at %s' %
                     rec.filename,
                     'rec': rec
                     }
-        rec.filename = 'ror-%s-%s' % (rec.recid, rec.name)
+        rec.filename = 'ror-%s-%s.mp3' % (rec.recid, rec.name)
         self.db.update(rec.recid, rec.serialize())
-        # TODO: real ffmpeg job!
         job_id = get_process_queue().submit(
             create_mp3,
             start=rec.starttime,

@@ -74,12 +74,12 @@ def mp3_join(named_intervals, target):
         assert '|' not in filename
         files.append(filename)
 
-    cmdline = [ffmpeg, '-i', 'concat:%s' % '|'.join(files), '-codec:a',
+    cmdline = [ffmpeg, '-i', 'concat:%s' % '|'.join(files), '-acodec',
                'copy']
     if startskip is not None:
         cmdline += ['-ss', str(startskip)]
     if endskip is not None:
-        cmdline += ['-to', str(len(files)*3600 - endskip)]
+        cmdline += ['-t', str(len(files)*3600 - (startskip + endskip))]
     cmdline += [target]
     cmdline += ['-loglevel', 'warning']
     return cmdline
