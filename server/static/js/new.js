@@ -98,9 +98,13 @@ $.widget("ror.ongoingrec", {
 		this.element.find(':ror-countclock').countclock("option", "since",
 				rec.starttime !== null ? new Date(rec.starttime*1000) : null
 				);
-		this.element.find(':ror-countclock').countclock("option", "to", 
-				rec.endtime !== null ? new Date(rec.endtime*1000) : null
-				);
+		if(this.options.state > 0) {
+			this.element.find(':ror-countclock').countclock("option", "to", 
+					rec.endtime !== null ? new Date(rec.endtime*1000) : null
+					);
+		} else {
+			this.element.find(':ror-countclock').countclock("option", "to", null);
+		}
 			
 		switch(this.options.state) {
 			case 0:
