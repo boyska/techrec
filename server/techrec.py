@@ -11,8 +11,6 @@ except:
     sys.exit("No SQLAlchemy.")
 
 
-logging.basicConfig(level=logging.INFO)
-
 PAGESIZE = 10
 
 """
@@ -61,6 +59,7 @@ class RecDB:
     def __init__(self, uri):
         self.engine = create_engine(uri, echo=False)
         self.conn = self.engine.connect()
+        self.log = logging.getLogger(name=self.__class__.__name__)
 
         logging.getLogger('sqlalchemy.engine').setLevel(logging.FATAL)
         logging.getLogger('sqlalchemy.engine.base.Engine')\
@@ -79,7 +78,7 @@ class RecDB:
     def add(self, simplerecord):
         print self.session.add( simplerecord )
         self.commit()
-        logging.info("New Record: %s" % simplerecord)
+        self.log.info("New Record: %s" % simplerecord)
         return ( simplerecord )
 
     def update(self, recid, rec):
@@ -89,18 +88,18 @@ class RecDB:
         if not len(_rlist) == 1:
             raise ValueError('Too many recs with id=%s' % recid)
 
-        logging.info("DB:: Update request %s:%s " % (recid, rec))
-        logging.info("DB:: Update: data before %s" % _rlist[0])
+        self.log.debug("DB:: Update request %s:%s " % (recid, rec))
+        self.log.debug("DB:: Update: data before %s" % _rlist[0])
 
         # 2013-11-24 22:22:42
         _rlist[0].starttime = rec["starttime"]
         _rlist[0].endtime = rec["endtime"]
         if 'name' in rec:
             _rlist[0].name = rec["name"]
-        logging.info("DB:: Update: data AFTER %s" % _rlist[0])
+        self.log.debug("DB:: Update: data AFTER %s" % _rlist[0])
 
         self.commit()
-        logging.info("DB:: Update complete")
+        self.log.debug("DB:: Update complete")
         return _rlist[0]
 
     def delete(self,recid):
@@ -108,12 +107,12 @@ class RecDB:
         _rlist = self._search(recid=recid)
 
         if len(_rlist) == 0:
-            logging.info("DB: Delete: no record found!")
+            self.log.info("DB: Delete: no record found!")
             self.err = "No rec found"
             return False
 
         if len(_rlist) > 1:
-            logging.info("DB: Delete: multilpe records found!")
+            self.log.warning("DB: Delete: multilpe records found!")
             self.err = "multiple ID Found %s" % (_rlist)
             return False
 
@@ -129,42 +128,51 @@ class RecDB:
     def get_all(self, page=0, page_size=PAGESIZE):
         return self._search(page=page, page_size=page_size)
 
-    def _search(self, _id=None, name=None, recid=None, starttime=None,
-                endtime=None, page=0, page_size=PAGESIZE):
+    def get_ongoing(self, page=0, page_size=PAGESIZE):
+        query = self._query_page(self._query_ongoing(), page, page_size)
+        return query.all()
 
-        logging.info("DB: Search => id:%s recid:%s name:%s starttime:%s endtime=%s" % (_id,recid,name,starttime,endtime))
+    def _query_ongoing(self, query=None):
+        if query is None:
+            query = self.session.query(Rec)
+        return query.filter(Rec.filename == None)
 
-        query = self.session.query(Rec)
+    def _query_page(self, query, page=0, page_size=PAGESIZE):
+        if page_size:
+            page_size = int(page_size)
+            query = query.limit(page_size)
+        if page:
+            query = query.offset(page*page_size)
+        return query
 
+    def _query_generic(self, query, _id=None, name=None, recid=None, starttime=None,
+                       endtime=None):
         if _id is not None:
             query = query.filter_by(id=_id)
         if recid is not None:
             query = query.filter_by(recid=recid)
         if name is not None:
             query = query.filter(Rec.name.like("%"+name+"%"))
-        try:
-            if starttime is not None:
-                _st = starttime
-                query = query.filter(Rec.starttime > _st)
-        except:
-                logging.info("DB: search : no valid starttime")
-                raise ValueError('starttime not valid')
+        if starttime is not None:
+            _st = starttime
+            query = query.filter(Rec.starttime > _st)
+        if endtime is not None:
+            _et = endtime
+            query = query.filter(Rec.endtime < _et)
+        return query
 
-        try:
-            if endtime is not None:
-                _et = endtime
-                query = query.filter(Rec.endtime < _et)
-        except ValueError:
-            logging.info("DB: search : no valid endtime")
+    def _search(self, _id=None, name=None, recid=None, starttime=None,
+                endtime=None, page=0, page_size=PAGESIZE):
+        self.log.debug(
+            "DB: Search => id:%s recid:%s name:%s starttime:%s endtime=%s" %
+            (_id,recid,name,starttime,endtime))
 
-        if page_size:
-            page_size = int(page_size)
-            query = query.limit(page_size)
-        if page:
-            query = query.offset(page*page_size)
-        print query
+        query = self.session.query(Rec)
+        query = self._query_generic(query, _id, name, recid, starttime,
+                                    endtime)
+        query = self._query_page(query, page, page_size)
+        self.log.debug("Searching: %s" % str(query))
         ret = query.all()
-        # print "Sending: %s" % ret
         return ret
 
     def get_err(self):

@@ -78,6 +78,8 @@ class RecServer:
         self._app.route('/api/update', method="POST", callback=self.update)
         self._app.route('/api/generate', method="POST", callback=self.generate)
         self._app.route('/api/search', callback=self.search)
+        self._app.route('/api/get/search', callback=self.search)
+        self._app.route('/api/get/ongoing', callback=self.get_ongoing)
         self._app.route('/api/delete', method="POST", callback=self.delete)
         self._app.route('/api/jobs', callback=self.running_jobs)
         self._app.route('/api/jobs/<job_id:int>', callback=self.check_job)
@@ -218,9 +220,16 @@ class RecServer:
 
         ret = {}
         for rec in values:
-            ret[rec.recid] = rec.serialize()
+            ret[rec.recid] = rec_sanitize(rec)
 
         logging.info("Return: %s" % ret)
+        return ret
+
+    def get_ongoing(self):
+        recs = self.db.get_ongoing()
+        ret = {}
+        for rec in recs:
+            ret[rec.recid] = rec_sanitize(rec)
         return ret
 
     # @route('/help')
