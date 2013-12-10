@@ -75,7 +75,8 @@ class RecServer:
 
         self._app.route('/api/create', method="POST", callback=self.create)
 
-        self._app.route('/api/update', method="POST", callback=self.update)
+        self._app.route('/api/update/<recid:int>', method="POST",
+                        callback=self.update)
         self._app.route('/api/generate', method="POST", callback=self.generate)
         self._app.route('/api/search', callback=self.search)
         self._app.route('/api/get/search', callback=self.search)
@@ -87,7 +88,8 @@ class RecServer:
         ## Static part of the site
         self._app.route('/output/<filepath:path>',
                         callback=lambda filepath:
-                        static_file(filepath, root=get_config()['AUDIO_OUTPUT']))
+                        static_file(filepath,
+                                    root=get_config()['AUDIO_OUTPUT']))
         self._app.route('/static/<filepath:path>',
                         callback=lambda filepath: static_file(filepath,
                                                               root='static/'))
@@ -105,14 +107,12 @@ class RecServer:
         print "Server:: Create request %s " % req
 
         starttime = datetime.now()
-        recid = starttime.strftime('%s')  # unix timestamp
         name = ""
         endtime = datetime.now()
 
-        print "RECID %s Starttime %s EndTime %s" %\
-              (recid, starttime, endtime)
+        print "Starttime %s EndTime %s" %\
+              (starttime, endtime)
         rec = Rec(name=name,
-                  recid=recid,
                   starttime=starttime,
                   endtime=endtime)
         ret = self.db.add(rec)
@@ -120,18 +120,18 @@ class RecServer:
         return self.rec_msg("Nuova registrazione creata! (id:%d)" % ret.id,
                             rec=rec_sanitize(rec))
 
-    def delete(self, recid=None):
+    def delete(self):
         req = dict(request.POST.allitems())
         logging.info("Server: request delete %s " % (req))
-        if 'recid' not in req:
+        if 'id' not in req:
             return self.rec_err("No valid ID")
 
-        if self.db.delete(req["recid"]):
+        if self.db.delete(req["id"]):
             return self.rec_msg("DELETE OK")
         else:
             return self.rec_err("DELETE error: %s" % (self.db.get_err()))
 
-    def update(self):
+    def update(self, recid):
         req = dict(request.POST.allitems())
 
         newrec = {}
@@ -149,7 +149,7 @@ class RecServer:
 
         try:
             logger.info("prima di update")
-            result_rec = self.db.update(req["recid"], newrec)
+            result_rec = self.db.update(recid, newrec)
             logger.info("dopo update")
         except Exception as exc:
             return self.rec_err("Errore Aggiornamento", exception=exc)
@@ -158,16 +158,17 @@ class RecServer:
 
     def generate(self):
         # prendiamo la rec in causa
-        recid = dict(request.POST.allitems())['recid']
-        rec = self.db._search(recid=recid)[0]
+        recid = dict(request.POST.allitems())['id']
+        rec = self.db._search(_id=recid)[0]
         if rec.filename is not None and os.path.filename.exists(rec.filename):
             return {'status': 'ready',
                     'message': 'The file has already been generated at %s' %
                     rec.filename,
                     'rec': rec
                     }
-        rec.filename = 'ror-%s-%s.mp3' % (rec.recid, rec.name)
-        self.db.update(rec.recid, rec.serialize())
+        rec.filename = 'ror-%s-%s.mp3' % (rec.starttime.strftime('%s'),
+                                          rec.name)
+        self.db.update(rec.id, rec.serialize())
         job_id = get_process_queue().submit(
             create_mp3,
             start=rec.starttime,
@@ -220,7 +221,7 @@ class RecServer:
 
         ret = {}
         for rec in values:
-            ret[rec.recid] = rec_sanitize(rec)
+            ret[rec.id] = rec_sanitize(rec)
 
         logging.info("Return: %s" % ret)
         return ret
@@ -229,20 +230,20 @@ class RecServer:
         recs = self.db.get_ongoing()
         ret = {}
         for rec in recs:
-            ret[rec.recid] = rec_sanitize(rec)
+            ret[rec.id] = rec_sanitize(rec)
         return ret
 
     # @route('/help')
     def help(self):
         return "<h1>help</h1><hr/>\
-        <h2>/get, /get/, /get/<recid> </h2>\
-        <h3>Get Info about rec identified by RECID </h3>\
+        <h2>/get, /get/, /get/<id> </h2>\
+        <h3>Get Info about rec identified by ID </h3>\
         \
         <h2>/search, /search/, /search/<key>/<value></h2>\
         <h3>Search rec that match key/value (or get all)</h3>\
         \
-        <h2>/delete/<recid> </h2>\
-        <h3>Delete rec identified by RECID </h3>\
+        <h2>/delete/<id> </h2>\
+        <h3>Delete rec identified by ID </h3>\
         <h2>/update </h2>\
         <h3>Not implemented.</h3>"
 
@@ -274,4 +275,4 @@ if __name__ == "__main__":
     c = RecServer()
     c._app.mount('/date', DateApp())
     c._app.run(host=get_config()['HOST'], port=get_config()['PORT'],
-            debug=get_config()['DEBUG'])
+               debug=get_config()['DEBUG'])

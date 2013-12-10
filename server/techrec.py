@@ -24,32 +24,30 @@ class Rec(Base):
     '''Entry on the DB'''
     __tablename__ = 'rec'
     id = Column(Integer, primary_key=True)
-    recid = Column(String)
     name = Column(String, nullable=True)
     starttime = Column(DateTime, nullable=True)
     endtime = Column(DateTime, nullable=True)
     filename = Column(String, nullable=True)
 
-    def __init__(self, recid="", name="", starttime=None, endtime=None,
+    def __init__(self, name="", starttime=None, endtime=None,
                  filename=None):
         self.name = name
         self.starttime = starttime
         self.endtime = endtime
-        self.recid = recid
         self.filename = filename
 
     def serialize(self):
         '''json-friendly encoding'''
-        return {'name': self.name,
+        return {'id': self.id,
+                'name': self.name,
                 'starttime': self.starttime,
                 'endtime': self.endtime,
-                'recid': self.recid,
                 'filename': self.filename
                 }
 
     def __repr__(self):
-        contents = "id:'%s',recid:'%s',name:'%s',Start: '%s',End: '%s'" % \
-            (self.id, self.recid, self.name, self.starttime, self.endtime)
+        contents = "id:'%s',name:'%s',Start: '%s',End: '%s'" % \
+            (self.id, self.name, self.starttime, self.endtime)
         if self.filename is not None:
             contents += ",Filename: '%s'" % self.filename
         return "<Rec(%s)>" % contents
@@ -81,14 +79,14 @@ class RecDB:
         self.log.info("New Record: %s" % simplerecord)
         return ( simplerecord )
 
-    def update(self, recid, rec):
+    def update(self, id, rec):
 
         ## TODO: rlist = results list
-        _rlist = self._search(recid=recid)
+        _rlist = self._search(_id=id)
         if not len(_rlist) == 1:
-            raise ValueError('Too many recs with id=%s' % recid)
+            raise ValueError('Too many recs with id=%s' % id)
 
-        self.log.debug("DB:: Update request %s:%s " % (recid, rec))
+        self.log.debug("DB:: Update request %s:%s " % (id, rec))
         self.log.debug("DB:: Update: data before %s" % _rlist[0])
 
         # 2013-11-24 22:22:42
@@ -102,9 +100,9 @@ class RecDB:
         self.log.debug("DB:: Update complete")
         return _rlist[0]
 
-    def delete(self,recid):
+    def delete(self, recid):
 
-        _rlist = self._search(recid=recid)
+        _rlist = self._search(id=recid)
 
         if len(_rlist) == 0:
             self.log.info("DB: Delete: no record found!")
@@ -116,7 +114,7 @@ class RecDB:
             self.err = "multiple ID Found %s" % (_rlist)
             return False
 
-        self.session.delete( _rlist[0] )
+        self.session.delete(_rlist[0])
         logging.info("DB: Delete: delete complete")
         self.commit()
         return True
@@ -145,12 +143,10 @@ class RecDB:
             query = query.offset(page*page_size)
         return query
 
-    def _query_generic(self, query, _id=None, name=None, recid=None, starttime=None,
+    def _query_generic(self, query, _id=None, name=None, starttime=None,
                        endtime=None):
         if _id is not None:
             query = query.filter_by(id=_id)
-        if recid is not None:
-            query = query.filter_by(recid=recid)
         if name is not None:
             query = query.filter(Rec.name.like("%"+name+"%"))
         if starttime is not None:
@@ -161,14 +157,14 @@ class RecDB:
             query = query.filter(Rec.endtime < _et)
         return query
 
-    def _search(self, _id=None, name=None, recid=None, starttime=None,
+    def _search(self, _id=None, name=None, starttime=None,
                 endtime=None, page=0, page_size=PAGESIZE):
         self.log.debug(
-            "DB: Search => id:%s recid:%s name:%s starttime:%s endtime=%s" %
-            (_id,recid,name,starttime,endtime))
+            "DB: Search => id:%s name:%s starttime:%s endtime=%s" %
+            (_id, name, starttime, endtime))
 
         query = self.session.query(Rec)
-        query = self._query_generic(query, _id, name, recid, starttime,
+        query = self._query_generic(query, _id, name, starttime,
                                     endtime)
         query = self._query_page(query, page, page_size)
         self.log.debug("Searching: %s" % str(query))

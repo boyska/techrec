@@ -10,6 +10,28 @@ var config = {
 	}
 };
 
+var API = {
+	create: function() {
+		return $.ajax('/api/create', {
+			method: 'POST',
+		dataType: 'json'
+		});
+	},
+	stop: function(rec) {
+		return $.post('/api/update/' + rec.id, {
+			starttime: rec.starttime
+		});
+	},
+	update: function(id, data) {
+		return $.post('/api/update/' + id, data);
+	},
+	generate: function(rec) {
+		return $.post('/api/generate', {
+			id: rec.id
+		});
+	}
+};
+
 $.widget("ror.countclock", {
 	options: {
 		since: null,
@@ -144,10 +166,7 @@ function poll_job(job_id, callback) {
 
 function add_new_rec() {
 	//progress()
-	return $.ajax('/api/create', {
-		method: 'POST',
-		dataType: 'json'
-	})
+	return API.create()
 	.done(function(res) {
 		//passa alla seconda schermata
 		$('#rec-inizia').remove();
@@ -161,25 +180,15 @@ function add_new_rec() {
 
 function stop_rec(rec, widget) {
 	"use strict";
-	var data = {
-		recid: rec.recid,
-		starttime: rec.starttime
-	};
-	var xhr = $.ajax('/api/update', {
-		method: 'POST',
-		dataType: 'json',
-		data: data
-	});
+	var xhr = API.stop(rec);
 	xhr.done(function(res_update) {
 		if(res_update.status !== true) {
 			console.error(res_update.status);
 			return;
 		}
 		widget.option("rec", res_update.rec);
-		$.ajax('/api/generate', {
-			method: 'POST',
-			data: { 'recid': rec.recid }
-		}).done(function(res_gen) {
+		var xhr = API.generate(rec)
+		.done(function(res_gen) {
 			//TODO: start polling on res.job_id
 			widget.option("state", 1);
 			poll_job(res_gen.job_id, function(data) {
@@ -191,8 +200,9 @@ function stop_rec(rec, widget) {
 				}
 			});
 		});
-		return xhr;
+	return xhr;
 	});
+	return xhr; //API.stop
 }
 
 function show_ongoing(ongoing_recs) {
@@ -202,10 +212,7 @@ function show_ongoing(ongoing_recs) {
 			stop_rec(data.rec, data.widget);
 		}).on("ongoingrecchange", function(evt, data) {
 			//TODO: aggiorna nome sul server
-			$.ajax('/api/update', {
-				method: 'POST',
-				data: data.rec,
-			});
+			API.update(data.rec.id, data.rec);
 		});
 		$('#ongoing-recs-table tbody').prepend(viewrec);
 		return viewrec;
