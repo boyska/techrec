@@ -29,6 +29,9 @@ var API = {
 		return $.post('/api/generate', {
 			id: rec.id
 		});
+	},
+	get_ongoing: function() {
+		return $.getJSON('/api/get/ongoing');
 	}
 };
 
@@ -38,7 +41,6 @@ $.widget("ror.countclock", {
 		to: null
 	},
 	_create: function() {
-		console.log("create");
 		this._update();
 		//TODO: aggiungi conto secondi/minuti passati
 	},
@@ -75,10 +77,8 @@ $.widget("ror.ongoingrec", {
 	_create: function() {
 		"use strict";
 		//convert a Rec into a <tr>
-		console.log(this.element);
 		var widget = this;
 		var rec = this.options.rec;
-		console.log("rec", rec);
 		var view = this.element.data('rec', rec).addClass('ongoing-rec').append(
 			$('<td/>').append(
 				$('<input/>').attr('placeholder', 'Nome trasmissione')
@@ -221,8 +221,30 @@ function show_ongoing(ongoing_recs) {
 
 $(function() {
 	"use strict";
+	/*global getKeys*/
 	//TODO: get-ongoing
-	$('.add-new-rec').click(add_new_rec);
+	API.get_ongoing()
+	.done(function(recs) {
+		$('.add-new-rec').click(add_new_rec);
+		console.log(recs);
+		if(getKeys(recs).length !== 0) {
+			$('#rec-inizia').remove();
+			$('#rec-normal').show();
+			show_ongoing(getKeys(recs).map(function(id) { console.log(id); return recs[id]; }));
+		}
+	});
 });
+
+//POLYFILL for Object.keys
+function getKeys(obj) {
+	var keys = [];
+	var key;
+	for(key in obj) {
+		if(obj.hasOwnProperty(key)) {
+			keys.push(key);
+		}
+	}
+	return keys;
+}
 
 /* vim: set ts=2 sw=2 noet fdm=indent: */

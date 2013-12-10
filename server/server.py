@@ -227,11 +227,8 @@ class RecServer:
         return ret
 
     def get_ongoing(self):
-        recs = self.db.get_ongoing()
-        ret = {}
-        for rec in recs:
-            ret[rec.id] = rec_sanitize(rec)
-        return ret
+        return {rec.id: rec_sanitize(rec)
+                for rec in self.db.get_ongoing()}
 
     # @route('/help')
     def help(self):
