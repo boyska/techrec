@@ -166,8 +166,9 @@ class RecServer:
                     rec.filename,
                     'rec': rec
                     }
-        rec.filename = 'ror-%s-%s.mp3' % (rec.starttime.strftime('%s'),
-                                          rec.name)
+        rec.filename = 'ror-%s-%s.mp3' % \
+                       (rec.starttime.strftime('%y%m%d_%H%M'),
+                        filter(lambda c: c.isalpha(), rec.name))
         self.db.update(rec.id, rec.serialize())
         job_id = get_process_queue().submit(
             create_mp3,
