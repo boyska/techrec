@@ -60,46 +60,23 @@ class DateApp(Bottle):
             '/custom?strftime=FORMAT : get now().strftime(FORMAT)'
 
 
-class RecServer:
+class RecAPI(Bottle):
     def __init__(self):
-        self._app = Bottle()
+        Bottle.__init__(self)
         self._route()
-
         self.db = RecDB(get_config()['DB_URI'])
 
     def _route(self):
-        ### This is the API part of the app
-        # TODO: move to namespace /api/
-        # TODO: create a "sub-application"
-        self._app.route('/api/help', callback=self.help)
-
-        self._app.route('/api/create', method="POST", callback=self.create)
-
-        self._app.route('/api/update/<recid:int>', method="POST",
-                        callback=self.update)
-        self._app.route('/api/generate', method="POST", callback=self.generate)
-        self._app.route('/api/search', callback=self.search)
-        self._app.route('/api/get/search', callback=self.search)
-        self._app.route('/api/get/ongoing', callback=self.get_ongoing)
-        self._app.route('/api/delete', method="POST", callback=self.delete)
-        self._app.route('/api/jobs', callback=self.running_jobs)
-        self._app.route('/api/jobs/<job_id:int>', callback=self.check_job)
-
-        ## Static part of the site
-        self._app.route('/output/<filepath:path>',
-                        callback=lambda filepath:
-                        static_file(filepath,
-                                    root=get_config()['AUDIO_OUTPUT']))
-        self._app.route('/static/<filepath:path>',
-                        callback=lambda filepath: static_file(filepath,
-                                                              root='static/'))
-        self._app.route('/', callback=lambda: redirect('/new.html'))
-        self._app.route('/new.html',
-                        callback=partial(static_file, 'new.html',
-                                         root='pages/'))
-        self._app.route('/tempo.html',
-                        callback=partial(static_file, 'tempo.html',
-                                         root='pages/'))
+        self.post('/create', callback=self.create)
+        self.post('/delete', callback=self.delete)
+        self.post('/update/<recid:int>', callback=self.update)
+        self.post('/generate', callback=self.generate)
+        self.get('/help', callback=self.help)
+        self.get('/', callback=self.help)
+        self.get('/get/search', callback=self.search)
+        self.get('/get/ongoing', callback=self.get_ongoing)
+        self.get('/jobs', callback=self.running_jobs)
+        self.get('/jobs/<job_id:int>', callback=self.check_job)
 
     def create(self):
         req = dict(request.POST.allitems())
@@ -246,6 +223,7 @@ class RecServer:
         <h3>Not implemented.</h3>"
 
     # JSON UTILS
+
     def rec_msg(self, msg, status=True, **kwargs):
         d = {"message": msg, "status": status}
         d.update(kwargs)
@@ -253,6 +231,35 @@ class RecServer:
 
     def rec_err(self, msg, **kwargs):
         return self.rec_msg(msg, status=False, **kwargs)
+
+
+class RecServer:
+    def __init__(self):
+        self._app = Bottle()
+        self._route()
+
+        self.db = RecDB(get_config()['DB_URI'])
+
+    def _route(self):
+        ### This is the API part of the app
+        # TODO: move to namespace /api/
+        # TODO: create a "sub-application"
+
+        ## Static part of the site
+        self._app.route('/output/<filepath:path>',
+                        callback=lambda filepath:
+                        static_file(filepath,
+                                    root=get_config()['AUDIO_OUTPUT']))
+        self._app.route('/static/<filepath:path>',
+                        callback=lambda filepath: static_file(filepath,
+                                                              root='static/'))
+        self._app.route('/', callback=lambda: redirect('/new.html'))
+        self._app.route('/new.html',
+                        callback=partial(static_file, 'new.html',
+                                         root='pages/'))
+        self._app.route('/tempo.html',
+                        callback=partial(static_file, 'tempo.html',
+                                         root='pages/'))
 
 
 if __name__ == "__main__":
@@ -272,5 +279,6 @@ if __name__ == "__main__":
         get_config().from_pyfile(conf)
     c = RecServer()
     c._app.mount('/date', DateApp())
+    c._app.mount('/api', RecAPI())
     c._app.run(host=get_config()['HOST'], port=get_config()['PORT'],
                debug=get_config()['DEBUG'])
