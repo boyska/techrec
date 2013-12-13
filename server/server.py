@@ -261,8 +261,29 @@ class RecServer:
                         callback=partial(static_file, 'tempo.html',
                                          root='pages/'))
 
+def pre_check_permissions():
+    import sys
+
+    def is_writable(d):
+        return os.access(d, os.W_OK)
+
+    if is_writable(get_config()['AUDIO_INPUT']):
+        yield "Audio input '%s' writable" % get_config()['AUDIO_INPUT']
+    if not os.access(get_config()['AUDIO_INPUT'], os.R_OK):
+        yield "Audio input '%s' unreadable" % get_config()['AUDIO_INPUT']
+        sys.exit(1)
+    if is_writable(os.getcwd()):
+        yield "Code writable"
+    if not is_writable(get_config()['AUDIO_OUTPUT']):
+        yield "Audio output '%s' not writable" % get_config()['AUDIO_OUTPUT']
+        sys.exit(1)
+
+def pre_check_user():
+    if os.geteuid() == 0:
+        yield "You're running as root; this is dangerous"
 
 if __name__ == "__main__":
+    prechecks=[pre_check_user, pre_check_permissions]
     configs = ['default_config.py']
     if 'TECHREC_CONFIG' in os.environ:
         for conf in os.environ['TECHREC_CONFIG'].split(':'):
@@ -277,6 +298,10 @@ if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
     for conf in configs:
         get_config().from_pyfile(conf)
+
+    for check in prechecks:
+        for warn in check():
+            logging.warn(warn)
     c = RecServer()
     c._app.mount('/date', DateApp())
     c._app.mount('/api', RecAPI())
