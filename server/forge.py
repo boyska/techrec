@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from time import sleep
 import os.path
 from subprocess import Popen
 
@@ -87,10 +88,25 @@ def mp3_join(named_intervals, target):
 
 def create_mp3(start, end, outfile, options={}, **kwargs):
     p = Popen(mp3_join([(get_timefile(begin), start_cut, end_cut)
-                           for begin, start_cut, end_cut
-                           in get_files_and_intervals(start, end)],
-                          outfile))
-    p.wait()
+                        for begin, start_cut, end_cut
+                        in get_files_and_intervals(start, end)],
+                       outfile))
+    if get_config()['FORGE_TIMEOUT'] == 0:
+        p.wait()
+    else:
+        start = datetime.now()
+        while (datetime.now() - start).total_seconds() < \
+               get_config()['FORGE_TIMEOUT']:
+            p.poll()
+            if p.returncode is None:
+                sleep(1)
+            else:
+                break
+    if p.returncode is None:
+        raise Exception('timeout')  # TODO: make a specific TimeoutError
     if p.returncode != 0:
         raise OSError("return code was %d" % p.returncode)
     return True
+
+def main_cmd(options):
+    create_mp3(options.starttime, options.endtime, options.outfile)
