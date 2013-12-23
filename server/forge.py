@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from time import sleep
-import os.path
+import os
 from subprocess import Popen
 
 from config_manager import get_config
@@ -34,7 +34,6 @@ def get_files_and_intervals(start, end, rounder=round_timefile):
     returns an iterator whose elements are (filename, start_cut, end_cut)
     Cuts are expressed in seconds
     '''
-    print '%s < %s' % (start, end)
     if end <= start:
         raise ValueError("end < start!")
 
@@ -103,6 +102,11 @@ def create_mp3(start, end, outfile, options={}, **kwargs):
             else:
                 break
     if p.returncode is None:
+        os.kill(p.pid, 15)
+        try:
+            os.remove(outfile)
+        except:
+            pass
         raise Exception('timeout')  # TODO: make a specific TimeoutError
     if p.returncode != 0:
         raise OSError("return code was %d" % p.returncode)
