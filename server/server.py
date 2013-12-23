@@ -263,8 +263,15 @@ class RecServer:
 
 
 def main_cmd(*args):
+    """meant to be called from argparse"""
     c = RecServer()
     c._app.mount('/date', DateApp())
     c._app.mount('/api', RecAPI())
     c._app.run(host=get_config()['HOST'], port=get_config()['PORT'],
                debug=get_config()['DEBUG'])
+
+if __name__ == '__main__':
+    from cli import common_pre
+    common_pre()
+    logger.warn("Usage of server.py is deprecated; use cli.py")
+    main_cmd()

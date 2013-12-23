@@ -41,7 +41,7 @@ class DateTimeAction(Action):
             raise ValueError("'%s' is not a valid datetime" % values)
         setattr(namespace, self.dest, parsed_val)
 
-if __name__ == "__main__":
+def common_pre():
     prechecks = [pre_check_user, pre_check_permissions]
     configs = ['default_config.py']
     if 'TECHREC_CONFIG' in os.environ:
@@ -62,6 +62,8 @@ if __name__ == "__main__":
         for warn in check():
             logging.warn(warn)
 
+if __name__ == "__main__":
+    common_pre()
     parser = ArgumentParser(description='creates mp3 files from live recordings')
     sub = parser.add_subparsers(title='subcommands',
                                 description='valid subcommands',
