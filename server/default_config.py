@@ -6,3 +6,4 @@ DB_URI = 'sqlite:///techrec.db'
 AUDIO_OUTPUT = 'output/'
 AUDIO_INPUT = 'rec/'
 FORGE_TIMEOUT = 20
+FORGE_MAX_DURATION = 3600*5

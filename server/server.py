@@ -143,6 +143,12 @@ class RecAPI(Bottle):
                     rec.filename,
                     'rec': rec
                     }
+        if get_config()['FORGE_MAX_DURATION'] > 0 and \
+                (rec.endtime - rec.starttime).total_seconds() > \
+                get_config()['FORGE_MAX_DURATION']:
+                    return {'status': 'error',
+                            'message': 'The requested recording is too long'
+                            }
         rec.filename = 'ror-%s-%s.mp3' % \
                        (rec.starttime.strftime('%y%m%d_%H%M'),
                         filter(lambda c: c.isalpha(), rec.name))
