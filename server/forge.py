@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from time import sleep
 import os
 from subprocess import Popen
+import logging
 
 from config_manager import get_config
 
@@ -94,8 +95,7 @@ def create_mp3(start, end, outfile, options={}, **kwargs):
         p.wait()
     else:
         start = datetime.now()
-        while (datetime.now() - start).total_seconds() < \
-               get_config()['FORGE_TIMEOUT']:
+        while (datetime.now() - start).total_seconds() < get_config()['FORGE_TIMEOUT']:
             p.poll()
             if p.returncode is None:
                 sleep(1)
@@ -112,5 +112,9 @@ def create_mp3(start, end, outfile, options={}, **kwargs):
         raise OSError("return code was %d" % p.returncode)
     return True
 
+
 def main_cmd(options):
-    create_mp3(options.starttime, options.endtime, options.outfile)
+    log = logging.getLogger('forge_main')
+    outfile = os.path.abspath(os.path.join(options.cwd, options.outfile))
+    log.debug('will forge an mp3 into %s' % (outfile))
+    create_mp3(options.starttime, options.endtime, outfile)

@@ -4,13 +4,14 @@ from argparse import ArgumentParser, Action
 from datetime import datetime
 import logging
 logger = logging.getLogger('cli')
+CWD = os.getcwd()
 
 import forge
 from config_manager import get_config
 import server
 
+
 def pre_check_permissions():
-    import sys
 
     def is_writable(d):
         return os.access(d, os.W_OK)
@@ -26,6 +27,7 @@ def pre_check_permissions():
         yield "Audio output '%s' not writable" % get_config()['AUDIO_OUTPUT']
         sys.exit(10)
 
+
 def pre_check_user():
     if os.geteuid() == 0:
         yield "You're running as root; this is dangerous"
@@ -40,6 +42,7 @@ class DateTimeAction(Action):
         else:
             raise ValueError("'%s' is not a valid datetime" % values)
         setattr(namespace, self.dest, parsed_val)
+
 
 def common_pre():
     prechecks = [pre_check_user, pre_check_permissions]
@@ -63,8 +66,9 @@ def common_pre():
             logging.warn(warn)
 
 if __name__ == "__main__":
-    common_pre()
-    parser = ArgumentParser(description='creates mp3 files from live recordings')
+    parser = ArgumentParser(description='creates mp3 from live recordings')
+    parser.add_argument('--verbose', '-v', action='count',
+                        help='Increase verbosity; can be used multiple times')
     sub = parser.add_subparsers(title='subcommands',
                                 description='valid subcommands',
                                 help='additional help')
@@ -78,4 +82,12 @@ if __name__ == "__main__":
     forge_p.set_defaults(func=forge.main_cmd)
 
     options = parser.parse_args()
+    options.cwd = CWD
+    if options.verbose < 1:
+        logging.basicConfig(level=logging.WARNING)
+    elif options.verbose == 1:
+        logging.basicConfig(level=logging.INFO)
+    elif options.verbose >= 2:
+        logging.basicConfig(level=logging.DEBUG)
+    common_pre()
     options.func(options)
