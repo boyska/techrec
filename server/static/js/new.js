@@ -37,6 +37,7 @@ var API = {
 
 $.widget("ror.countclock", {
 	options: {
+		errormsg: null,
 		since: null,
 		to: null
 	},
@@ -72,7 +73,7 @@ $.widget("ror.ongoingrec", {
 		rec: null,
 	state: 0,
 	filename: null,
-	/*0 = ongoing, 1 = encoding, 2 = ready to download*/
+	/*0 = ongoing, 1 = encoding, 2 = ready to download, 9 = errors*/
 	},
 	_create: function() {
 		"use strict";
@@ -102,12 +103,30 @@ $.widget("ror.ongoingrec", {
 		view.on("click", ".rec-stop", function(evt) {
 			widget._trigger("stop", evt, {rec: rec, widget: widget});
 		});
+		view.on("click", ".rec-failed", function(evt) {
+			$('<div/>').html($('<pre/>').text(widget.options.errormsg))
+			.dialog({modal: true, title: "Dettaglio errori",
+				buttons: {
+					Retry: function() {
+						console.log("retrying");
+						widget._setOption("state", 0);
+						widget._trigger("retry", evt, {rec: rec, widget: widget});
+						$(this).dialog("close");
+					}, Cancel: function() {
+						$(this).dialog("close");
+					}
+				}
+			});
+		});
 
 		return view;
 	},
 	_setOption: function(key, value) {
 		this.options[key] = value;
 		if(key === 'state') {
+			if(value !== 9) {
+				this.options.errormsg = null;
+			}
 			if(value < 2) {
 				this.options.filename = null;
 			}
@@ -128,24 +147,28 @@ $.widget("ror.ongoingrec", {
 			this.element.find(':ror-countclock').countclock("option", "to", null);
 		}
 			
+		this.element.find('a').removeClass(
+				'pure-button-disabled rec-encoding rec-download rec-failed rec-stop')
 		switch(this.options.state) {
 			case 0:
-				this.element.find('a').removeClass('pure-button-disabled rec-encoding rec-download')
-					.addClass("rec-stop").html(
+				this.element.find('a').addClass("rec-stop").html(
 							$('<i/>').addClass('fa fa-stop')).append(' Stop');
 				break;
 			case 1:
-				this.element.find('a').removeClass('rec-stop rec-download')
+				this.element.find('a')
 					.addClass("pure-button-disabled rec-encoding").html(
 							$('<i/>').addClass('fa fa-clock-o')).append(' Aspetta');
 				break;
 			case 2:
-				this.element.find('a').removeClass('pure-button-disabled rec-stop rec-encoding')
-					.addClass("rec-download")
+				this.element.find('a').addClass("rec-download")
 					.prop('href', this.options.filename)
 					.html(
 							$('<i/>').addClass('fa fa-download').css('color',
 								'green')).append(' Scarica');
+				break;
+			case 9:
+				this.element.find('a').addClass("rec-failed").html(
+							$('<i/>').addClass('fa fa-warning')).append(' Errori');
 				break;
 		}
 	}
@@ -178,31 +201,43 @@ function add_new_rec() {
 	});
 }
 
+function gen_rec(rec, widget) {
+	"use strict";
+	var gen_xhr = API.generate(rec);
+	gen_xhr.done(function(res_gen) {
+		widget.option("state", 1);
+		poll_job(res_gen.job_id, function(data) {
+			if(data.job_status !== 'DONE') {
+				console.error("Job failed!", data);
+				widget.option("errormsg", "Generation failed");
+				widget.option("state", 9);
+			} else {
+				widget.option("filename", res_gen.result);
+				widget.option("state", 2);
+			}
+		});
+	});
+	gen_xhr.fail(function(res_gen) {
+		var error = JSON.parse(res_gen.responseText).message;
+		widget.option("errormsg", error);
+		widget.option("state", 9);
+	});
+	return gen_xhr;
+}
+
 function stop_rec(rec, widget) {
 	"use strict";
-	var xhr = API.stop(rec);
-	xhr.done(function(res_update) {
-		if(res_update.status !== true) {
-			console.error(res_update.status);
-			return;
-		}
+	var stop_xhr = API.stop(rec);
+	stop_xhr.done(function(res_update) {
 		widget.option("rec", res_update.rec);
-		var xhr = API.generate(rec)
-		.done(function(res_gen) {
-			//TODO: start polling on res.job_id
-			widget.option("state", 1);
-			poll_job(res_gen.job_id, function(data) {
-				if(data.job_status !== 'DONE') {
-					console.error("Job failed!", data);
-				} else {
-					widget.option("filename", res_gen.result);
-					widget.option("state", 2);
-				}
-			});
-		});
-	return xhr;
+		return gen_rec(rec, widget);
 	});
-	return xhr; //API.stop
+	stop_xhr.fail(function(res_update) {
+			var error = JSON.parse(res_update.responseText).message;
+			widget.option("errormsg", error);
+			widget.option("state", 9);
+	});
+	return stop_xhr; //API.stop
 }
 
 function show_ongoing(ongoing_recs) {
@@ -210,6 +245,9 @@ function show_ongoing(ongoing_recs) {
 		var viewrec = $('<tr/>').ongoingrec({rec: rec});
 		viewrec.on("ongoingrecstop", function(evt, data) {
 			stop_rec(data.rec, data.widget);
+		}).on("ongoingrecretry", function(evt, data) {
+			//FIXME: bisognerebbe solo generare, senza stoppare
+			gen_rec(data.rec, data.widget);
 		}).on("ongoingrecchange", function(evt, data) {
 			//TODO: aggiorna nome sul server
 			API.update(data.rec.id, data.rec);

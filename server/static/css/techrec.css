@@ -12,6 +12,13 @@
 	display: table-cell;
 }
 
+.rec-download .fa {
+	color: green;
+}
+.rec-failed .fa {
+	color: red;
+}
+
 .pure-button-enorme {
 	font-size: 300%;
 }

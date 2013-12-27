@@ -137,7 +137,7 @@ class RecAPI(Bottle):
         # prendiamo la rec in causa
         recid = dict(request.POST.allitems())['id']
         rec = self.db._search(_id=recid)[0]
-        if rec.filename is not None and os.path.filename.exists(rec.filename):
+        if rec.filename is not None and os.path.exists(rec.filename):
             return {'status': 'ready',
                     'message': 'The file has already been generated at %s' %
                     rec.filename,
@@ -146,6 +146,7 @@ class RecAPI(Bottle):
         if get_config()['FORGE_MAX_DURATION'] > 0 and \
                 (rec.endtime - rec.starttime).total_seconds() > \
                 get_config()['FORGE_MAX_DURATION']:
+                    response.status = 400
                     return {'status': 'error',
                             'message': 'The requested recording is too long'
                             }
