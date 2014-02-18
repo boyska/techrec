@@ -7,6 +7,7 @@ logger = logging.getLogger('cli')
 CWD = os.getcwd()
 
 import forge
+import maint
 from config_manager import get_config
 import server
 
@@ -25,6 +26,7 @@ def pre_check_permissions():
         yield "Code writable"
     if not is_writable(get_config()['AUDIO_OUTPUT']):
         yield "Audio output '%s' not writable" % get_config()['AUDIO_OUTPUT']
+        logger.critical("Aborting")
         sys.exit(10)
 
 
@@ -69,17 +71,26 @@ if __name__ == "__main__":
     parser = ArgumentParser(description='creates mp3 from live recordings')
     parser.add_argument('--verbose', '-v', action='count',
                         help='Increase verbosity; can be used multiple times')
-    sub = parser.add_subparsers(title='subcommands',
-                                description='valid subcommands',
-                                help='additional help')
-    serve_p = sub.add_parser('serve')
+    parser.add_argument('--pretend', '-p', action='store_true', default=False,
+                        help='Only pretend; no real action will be done')
+    sub = parser.add_subparsers(title='main subcommands',
+                                description='valid subcommands')
+    serve_p = sub.add_parser('serve', help="Start an HTTP server")
     serve_p.set_defaults(func=server.main_cmd)
-    forge_p = sub.add_parser('forge')
+    forge_p = sub.add_parser('forge', help="Create an audio file")
     forge_p.add_argument('starttime', metavar='FROM', action=DateTimeAction)
     forge_p.add_argument('endtime', metavar='TO', action=DateTimeAction)
     forge_p.add_argument('-o', metavar='OUTFILE', dest='outfile',
                          default='out.mp3', help='Path of the output mp3')
     forge_p.set_defaults(func=forge.main_cmd)
+
+    cleanold_p = sub.add_parser('cleanold', help="Remove old files from DB",
+            description="Will remove oldfiles with no filename from DB")
+    cleanold_p.add_argument('-t', metavar='MINAGE', dest='minage',
+                         default='14', type=int,
+                         help='Minimum age (in days) for removal')
+    cleanold_p.set_defaults(func=maint.cleanold_cmd)
+
 
     options = parser.parse_args()
     options.cwd = CWD
@@ -89,5 +100,7 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.INFO)
     elif options.verbose >= 2:
         logging.basicConfig(level=logging.DEBUG)
+        if options.verbose > 2:
+            logging.info("giving verbose flag >2 times is useless")
     common_pre()
     options.func(options)

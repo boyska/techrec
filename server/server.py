@@ -148,7 +148,9 @@ class RecAPI(Bottle):
                 get_config()['FORGE_MAX_DURATION']:
                     response.status = 400
                     return {'status': 'error',
-                            'message': 'The requested recording is too long'
+                            'message': 'The requested recording is too long' +
+                            ' (%d seconds)' %
+                            (rec.endtime - rec.starttime).total_seconds()
                             }
         rec.filename = 'ror-%s-%s.mp3' % \
                        (rec.starttime.strftime('%y%m%d_%H%M'),

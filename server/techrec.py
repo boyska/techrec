@@ -1,14 +1,12 @@
 import logging
+from datetime import datetime, timedelta
 
 
 import sys
 
-try:
-    from sqlalchemy import create_engine, Column, Integer, String, DateTime
-    from sqlalchemy.orm import sessionmaker
-    from sqlalchemy.ext.declarative import declarative_base
-except:
-    sys.exit("No SQLAlchemy.")
+from sqlalchemy import create_engine, Column, Integer, String, DateTime
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 
 
 PAGESIZE = 10
@@ -110,7 +108,7 @@ class RecDB:
             return False
 
         if len(_rlist) > 1:
-            self.log.warning("DB: Delete: multilpe records found!")
+            self.log.warning("DB: Delete: multiple records found!")
             self.err = "multiple ID Found %s" % (_rlist)
             return False
 
@@ -130,10 +128,23 @@ class RecDB:
         query = self._query_page(self._query_ongoing(), page, page_size)
         return query.all()
 
+    def get_not_completed(self, minseconds=36000):
+        query = self._query_ongoing()
+        query = self._query_older(timedelta(seconds=minseconds), query)
+        return query.all()
+
     def _query_ongoing(self, query=None):
         if query is None:
             query = self.session.query(Rec)
         return query.filter(Rec.filename == None)
+
+
+
+    def _query_older(self, delta, query=None):
+        if query is None:
+            query = self.session.query(Rec)
+        return query.filter(Rec.endtime < datetime.now() - delta)
+
 
     def _query_page(self, query, page=0, page_size=PAGESIZE):
         if page_size:
@@ -179,8 +190,6 @@ class RecDB:
 
 
 if __name__ == "__main__":
-    from datetime import datetime
-
     def printall(queryres):
         for record in queryres:
             print "Record: %s" % record
