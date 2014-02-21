@@ -152,9 +152,10 @@ class RecAPI(Bottle):
                             ' (%d seconds)' %
                             (rec.endtime - rec.starttime).total_seconds()
                             }
-        rec.filename = 'ror-%s-%s.mp3' % \
-                       (rec.starttime.strftime('%y%m%d_%H%M'),
-                        filter(lambda c: c.isalpha(), rec.name))
+        rec.filename = get_config()['AUDIO_OUTPUT_FORMAT'] % {
+                'time': rec.starttime.strftime('%y%m%d_%H%M'),
+                'name': filter(lambda c: c.isalpha(), rec.name)
+                }
         self.db.update(rec.id, rec.serialize())
         job_id = get_process_queue().submit(
             create_mp3,

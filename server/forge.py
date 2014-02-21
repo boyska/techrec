@@ -13,9 +13,9 @@ def get_timefile_exact(time):
     that work is done in get_timefile(time)
     '''
     return os.path.join(
-        get_config()['AUDIO_INPUT'],
-        time.strftime('%Y-%m/%d/rec-%Y-%m-%d-%H-%M-%S-ror.mp3')
-        )
+            get_config()['AUDIO_INPUT'],
+            time.strftime(get_config()['AUDIO_INPUT_FORMAT'])
+            )
 
 
 def round_timefile(exact):
