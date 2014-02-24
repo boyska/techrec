@@ -259,7 +259,8 @@ class RecServer:
         self._app.route('/output/<filepath:path>',
                         callback=lambda filepath:
                         static_file(filepath,
-                                    root=get_config()['AUDIO_OUTPUT']))
+                                    root=get_config()['AUDIO_OUTPUT'],
+                                    download=True))
         self._app.route('/static/<filepath:path>',
                         callback=lambda filepath: static_file(filepath,
                                                               root='static/'))
