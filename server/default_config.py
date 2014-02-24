@@ -1,4 +1,3 @@
-OUTPUT_DIR = 'output'
 HOST = 'localhost'
 PORT = '8000'
 DEBUG = True
