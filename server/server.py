@@ -81,14 +81,12 @@ class RecAPI(Bottle):
     def create(self):
         req = dict(request.POST.allitems())
         ret = {}
-        print "Server:: Create request %s " % req
+        logger.debug("Server:: Create request %s " % req)
 
         starttime = datetime.now()
         name = ""
         endtime = datetime.now()
 
-        print "Starttime %s EndTime %s" %\
-              (starttime, endtime)
         rec = Rec(name=name,
                   starttime=starttime,
                   endtime=endtime)
@@ -162,7 +160,7 @@ class RecAPI(Bottle):
             start=rec.starttime,
             end=rec.endtime,
             outfile=os.path.join(get_config()['AUDIO_OUTPUT'], rec.filename))
-        print "SUBMITTED: %d" % job_id
+        logger.debug("SUBMITTED: %d" % job_id)
         return self.rec_msg("Aggiornamento completato!",
                             job_id=job_id,
                             result='/output/' + rec.filename,
@@ -200,7 +198,7 @@ class RecAPI(Bottle):
     def search(self, args=None):
         req = dict()
         req.update(request.GET.allitems())
-        print "Search request: %s" % (req)
+        logger.debug("Search request: %s" % (req))
 
         values = self.db._search(**req)
         from pprint import pprint
@@ -251,10 +249,6 @@ class RecServer:
         self.db = RecDB(get_config()['DB_URI'])
 
     def _route(self):
-        ### This is the API part of the app
-        # TODO: move to namespace /api/
-        # TODO: create a "sub-application"
-
         ## Static part of the site
         self._app.route('/output/<filepath:path>',
                         callback=lambda filepath:
