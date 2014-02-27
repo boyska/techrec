@@ -79,6 +79,8 @@ def mp3_join(named_intervals, target):
                'copy']
     if startskip is not None:
         cmdline += ['-ss', str(startskip)]
+    else:
+        startskip = 0
     if endskip is not None:
         cmdline += ['-t', str(len(files)*3600 - (startskip + endskip))]
     cmdline += [target]
