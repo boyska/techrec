@@ -1,14 +1,17 @@
 from datetime import datetime, timedelta
 
-from nose.tools import raises, assert_items_equal, eq_
+from nose.tools import raises, eq_
 
 from forge import get_files_and_intervals, get_timefile_exact, round_timefile,\
     get_timefile, mp3_join
+from config_manager import get_config
 
 eight = datetime(2014, 5, 30, 20)
 nine = datetime(2014, 5, 30, 21)
 ten = datetime(2014, 5, 30, 22)
 
+get_config()['AUDIO_INPUT'] = ''
+get_config()['AUDIO_INPUT_FORMAT'] = '%Y-%m/%d/%Y-%m-%d-%H-%M-%S.mp3'
 
 def minutes(n):
     return timedelta(minutes=n)
@@ -22,7 +25,7 @@ def seconds(n):
 
 def test_timefile_exact():
     eq_(get_timefile_exact(eight),
-        '2014-05/30/rec-2014-05-30-20-00-00-ror.mp3')
+        '2014-05/30/2014-05-30-20-00-00.mp3')
 
 ## Rounding
 
@@ -42,12 +45,12 @@ def test_rounding_value():
 
 def test_timefile_alreadyround():
     eq_(get_timefile(eight),
-        '2014-05/30/rec-2014-05-30-20-00-00-ror.mp3')
+        '2014-05/30/2014-05-30-20-00-00.mp3')
 
 
 def test_timefile_toround():
     eq_(get_timefile(eight + minutes(20)),
-        '2014-05/30/rec-2014-05-30-20-00-00-ror.mp3')
+        '2014-05/30/2014-05-30-20-00-00.mp3')
 
 ## Intervals
 
@@ -158,29 +161,29 @@ def test_intervals_left_2():
 
 def test_mp3_1():
     eq_(' '.join(mp3_join((('a', 0, 0),), 'foo.mp3')),
-        'ffmpeg -i concat:a -codec:a copy foo.mp3')
+        'ffmpeg -i concat:a -acodec copy foo.mp3 -loglevel warning')
 
 
 def test_mp3_1_left():
     eq_(' '.join(mp3_join((('a', 160, 0),), 'foo.mp3')),
-        'ffmpeg -i concat:a -codec:a copy -ss 160 foo.mp3')
+        'ffmpeg -i concat:a -acodec copy -ss 160 foo.mp3 -loglevel warning')
 
 
 def test_mp3_1_right():
     eq_(' '.join(mp3_join((('a', 0, 1600),), 'foo.mp3')),
-        'ffmpeg -i concat:a -codec:a copy -to 2000 foo.mp3')
+        'ffmpeg -i concat:a -acodec copy -t 2000 foo.mp3 -loglevel warning')
 
 
 def test_mp3_1_leftright():
     eq_(' '.join(mp3_join((('a', 160, 1600),), 'foo.mp3')),
-        'ffmpeg -i concat:a -codec:a copy -ss 160 -to 2000 foo.mp3')
+        'ffmpeg -i concat:a -acodec copy -ss 160 -t 1840 foo.mp3 -loglevel warning')
 
 
 def test_mp3_2():
     eq_(' '.join(mp3_join((('a', 0, 0), ('b', 0, 0)), 'foo.mp3')),
-        'ffmpeg -i concat:a|b -codec:a copy foo.mp3')
+        'ffmpeg -i concat:a|b -acodec copy foo.mp3 -loglevel warning')
 
 
 def test_mp3_2_leftright():
     eq_(' '.join(mp3_join((('a', 1000, 0), ('b', 0, 1600)), 'foo.mp3')),
-        'ffmpeg -i concat:a|b -codec:a copy -ss 1000 -to 5600 foo.mp3')
+        'ffmpeg -i concat:a|b -acodec copy -ss 1000 -t 4600 foo.mp3 -loglevel warning')
