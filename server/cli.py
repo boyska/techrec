@@ -37,9 +37,7 @@ def pre_check_user():
 
 class DateTimeAction(Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        if len(values) == 15:
-            parsed_val = datetime.strptime(values, '%Y%m%d-%H%M%S')
-        elif len(values) == 13:
+        if len(values) == 15 or len(values) == 13:
             parsed_val = datetime.strptime(values, '%Y%m%d-%H%M%S')
         else:
             raise ValueError("'%s' is not a valid datetime" % values)
@@ -78,8 +76,12 @@ if __name__ == "__main__":
     serve_p = sub.add_parser('serve', help="Start an HTTP server")
     serve_p.set_defaults(func=server.main_cmd)
     forge_p = sub.add_parser('forge', help="Create an audio file")
-    forge_p.add_argument('starttime', metavar='FROM', action=DateTimeAction)
-    forge_p.add_argument('endtime', metavar='TO', action=DateTimeAction)
+    forge_p.add_argument('starttime', metavar='START',
+            help='Start time, espressed as 19450425_1200 (%%Y%%m%%d-%%H%%M%%S)',
+            action=DateTimeAction)
+    forge_p.add_argument('endtime', metavar='END',
+            help='End time, espressed as 19450425_1200 (%%Y%%m%%d-%%H%%M%%S)',
+            action=DateTimeAction)
     forge_p.add_argument('-o', metavar='OUTFILE', dest='outfile',
                          default='out.mp3', help='Path of the output mp3')
     forge_p.set_defaults(func=forge.main_cmd)
