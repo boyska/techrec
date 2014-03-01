@@ -1,40 +1,6 @@
-/*global $*/
+/*global $, config, RecAPI*/
+
 //TODO: move to a separate file(?)
-var config = {
-	polling_interval: 500,
-	datetimeformat: function(d) {
-		if(Math.abs(new Date() - d) > (3*60*60*1000)) {
-			return d.toLocaleString();
-		}
-		return d.toLocaleTimeString();
-	}
-};
-
-var API = {
-	create: function() {
-		return $.ajax('/api/create', {
-			method: 'POST',
-		dataType: 'json'
-		});
-	},
-	stop: function(rec) {
-		return $.post('/api/update/' + rec.id, {
-			starttime: rec.starttime
-		});
-	},
-	update: function(id, data) {
-		return $.post('/api/update/' + id, data);
-	},
-	generate: function(rec) {
-		return $.post('/api/generate', {
-			id: rec.id
-		});
-	},
-	get_ongoing: function() {
-		return $.getJSON('/api/get/ongoing');
-	}
-};
-
 $.widget("ror.countclock", {
 	options: {
 		errormsg: null,
@@ -88,7 +54,6 @@ $.widget("ror.ongoingrec", {
 				$('<td/>').append($('<a/>')
 					.addClass('pure-button pure-button-large'))
 				);
-
 		this._update();
 
 		view.on("change", "input", function(evt) {
@@ -148,7 +113,7 @@ $.widget("ror.ongoingrec", {
 		}
 			
 		this.element.find('a').removeClass(
-				'pure-button-disabled rec-encoding rec-download rec-failed rec-stop')
+				'pure-button-disabled rec-encoding rec-download rec-failed rec-stop');
 		switch(this.options.state) {
 			case 0:
 				this.element.find('a').addClass("rec-stop").html(
@@ -189,21 +154,23 @@ function poll_job(job_id, callback) {
 
 function add_new_rec() {
 	//progress()
-	return API.create()
+	return RecAPI.create()
 	.done(function(res) {
+		/*global show_ongoing*/
 		//passa alla seconda schermata
 		$('#rec-inizia').remove();
 		$('#rec-normal').show();
 		show_ongoing([res.rec]);
 	})
 	.fail(function() {
+		/*global alert*/
 		alert("C'e' stato qualche problema nella comunicazione col server");
 	});
 }
 
 function gen_rec(rec, widget) {
 	"use strict";
-	var gen_xhr = API.generate(rec);
+	var gen_xhr = RecAPI.generate(rec);
 	gen_xhr.done(function(res_gen) {
 		widget.option("state", 1);
 		poll_job(res_gen.job_id, function(data) {
@@ -227,7 +194,7 @@ function gen_rec(rec, widget) {
 
 function stop_rec(rec, widget) {
 	"use strict";
-	var stop_xhr = API.stop(rec);
+	var stop_xhr = RecAPI.stop(rec);
 	stop_xhr.done(function(res_update) {
 		widget.option("rec", res_update.rec);
 		return gen_rec(rec, widget);
@@ -237,7 +204,7 @@ function stop_rec(rec, widget) {
 			widget.option("errormsg", error);
 			widget.option("state", 9);
 	});
-	return stop_xhr; //API.stop
+	return stop_xhr; //RecAPI.stop
 }
 
 function show_ongoing(ongoing_recs) {
@@ -250,7 +217,7 @@ function show_ongoing(ongoing_recs) {
 			gen_rec(data.rec, data.widget);
 		}).on("ongoingrecchange", function(evt, data) {
 			//TODO: aggiorna nome sul server
-			API.update(data.rec.id, data.rec);
+			RecAPI.update(data.rec.id, data.rec);
 		});
 		$('#ongoing-recs-table tbody').prepend(viewrec);
 		return viewrec;
@@ -261,7 +228,7 @@ $(function() {
 	"use strict";
 	/*global getKeys*/
 	//TODO: get-ongoing
-	API.get_ongoing()
+	RecAPI.get_ongoing()
 	.done(function(recs) {
 		$('.add-new-rec').click(add_new_rec);
 		console.log(recs);

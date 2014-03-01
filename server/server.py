@@ -81,15 +81,16 @@ class RecAPI(Bottle):
     def create(self):
         req = dict(request.POST.allitems())
         ret = {}
-        logger.debug("Server:: Create request %s " % req)
+        logger.debug("Create request %s " % req)
 
-        starttime = datetime.now()
-        name = ""
-        endtime = datetime.now()
+        now = datetime.now()
+        start = date_read(req['starttime']) if 'starttime' in req else now
+        name = req['name'] if 'name' in req else ""
+        end = date_read(req['endtime']) if 'endtime' in req else now
 
         rec = Rec(name=name,
-                  starttime=starttime,
-                  endtime=endtime)
+                  starttime=start,
+                  endtime=end)
         ret = self.db.add(rec)
 
         return self.rec_msg("Nuova registrazione creata! (id:%d)" % ret.id,
@@ -151,9 +152,9 @@ class RecAPI(Bottle):
                             (rec.endtime - rec.starttime).total_seconds()
                             }
         rec.filename = get_config()['AUDIO_OUTPUT_FORMAT'] % {
-                'time': rec.starttime.strftime('%y%m%d_%H%M'),
-                'name': filter(lambda c: c.isalpha(), rec.name)
-                }
+            'time': rec.starttime.strftime('%y%m%d_%H%M'),
+            'name': filter(lambda c: c.isalpha(), rec.name)
+        }
         self.db.update(rec.id, rec.serialize())
         job_id = get_process_queue().submit(
             create_mp3,
@@ -262,8 +263,8 @@ class RecServer:
         self._app.route('/new.html',
                         callback=partial(static_file, 'new.html',
                                          root='pages/'))
-        self._app.route('/tempo.html',
-                        callback=partial(static_file, 'tempo.html',
+        self._app.route('/old.html',
+                        callback=partial(static_file, 'old.html',
                                          root='pages/'))
 
 
