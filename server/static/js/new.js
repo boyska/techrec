@@ -1,4 +1,4 @@
-/*global $, config, RecAPI*/
+/*global $, config, RecAPI, poll_job*/
 
 //TODO: move to a separate file(?)
 $.widget("ror.countclock", {
@@ -37,9 +37,9 @@ $.widget("ror.countclock", {
 $.widget("ror.ongoingrec", {
 	options: {
 		rec: null,
-	state: 0,
-	filename: null,
-	/*0 = ongoing, 1 = encoding, 2 = ready to download, 9 = errors*/
+		state: 0,
+		filename: null,
+		/*0 = ongoing, 1 = encoding, 2 = ready to download, 9 = errors*/
 	},
 	_create: function() {
 		"use strict";
@@ -49,11 +49,11 @@ $.widget("ror.ongoingrec", {
 		var view = this.element.data('rec', rec).addClass('ongoing-rec').append(
 			$('<td/>').append(
 				$('<input/>').attr('placeholder', 'Nome trasmissione')
-				)
-			).append( $('<td class="ongoingrec-time"/>').countclock()).append(
-				$('<td/>').append($('<a/>')
-					.addClass('pure-button pure-button-large'))
-				);
+		)
+		).append( $('<td class="ongoingrec-time"/>').countclock()).append(
+		$('<td/>').append($('<a/>')
+											.addClass('pure-button pure-button-large'))
+		);
 		this._update();
 
 		view.on("change", "input", function(evt) {
@@ -62,8 +62,8 @@ $.widget("ror.ongoingrec", {
 			prevrec.name = $(evt.target).val();
 			$(evt.target).parents('tr.ongoing-rec').data('rec', prevrec);
 			widget._trigger("change", evt,
-				{rec: rec, widget: widget, changed: {name: rec.name}}
-				);
+											{rec: rec, widget: widget, changed: {name: rec.name}}
+										 );
 		});
 		view.on("click", ".rec-stop", function(evt) {
 			widget._trigger("stop", evt, {rec: rec, widget: widget});
@@ -71,16 +71,16 @@ $.widget("ror.ongoingrec", {
 		view.on("click", ".rec-failed", function(evt) {
 			$('<div/>').html($('<pre/>').text(widget.options.errormsg))
 			.dialog({modal: true, title: "Dettaglio errori",
-				buttons: {
-					Retry: function() {
-						console.log("retrying");
-						widget._setOption("state", 0);
-						widget._trigger("retry", evt, {rec: rec, widget: widget});
-						$(this).dialog("close");
-					}, Cancel: function() {
-						$(this).dialog("close");
-					}
-				}
+							buttons: {
+								Retry: function() {
+									console.log("retrying");
+									widget._setOption("state", 0);
+									widget._trigger("retry", evt, {rec: rec, widget: widget});
+									$(this).dialog("close");
+								}, Cancel: function() {
+									$(this).dialog("close");
+								}
+							}
 			});
 		});
 
@@ -102,55 +102,42 @@ $.widget("ror.ongoingrec", {
 		var rec = this.options.rec;
 		this.element.find('input').val(rec.name);
 		this.element.find(':ror-countclock').countclock("option", "since",
-				rec.starttime !== null ? new Date(rec.starttime*1000) : null
-				);
+									rec.starttime !== null ? new Date(rec.starttime*1000) :	null);
 		if(this.options.state > 0) {
 			this.element.find(':ror-countclock').countclock("option", "to", 
-					rec.endtime !== null ? new Date(rec.endtime*1000) : null
-					);
+																											rec.endtime !== null ? new Date(rec.endtime*1000) : null
+																											);
 		} else {
 			this.element.find(':ror-countclock').countclock("option", "to", null);
 		}
-			
+
 		this.element.find('a').removeClass(
-				'pure-button-disabled rec-encoding rec-download rec-failed rec-stop');
-		switch(this.options.state) {
-			case 0:
-				this.element.find('a').addClass("rec-stop").html(
-							$('<i/>').addClass('fa fa-stop')).append(' Stop');
+			'pure-button-disabled rec-encoding rec-download rec-failed rec-stop');
+			switch(this.options.state) {
+				case 0:
+					this.element.find('a').addClass("rec-stop").html(
+						$('<i/>').addClass('fa fa-stop')).append(' Stop');
 				break;
-			case 1:
-				this.element.find('a')
+				case 1:
+					this.element.find('a')
 					.addClass("pure-button-disabled rec-encoding").html(
-							$('<i/>').addClass('fa fa-clock-o')).append(' Aspetta');
+						$('<i/>').addClass('fa fa-clock-o')).append(' Aspetta');
 				break;
-			case 2:
-				this.element.find('a').addClass("rec-download")
+				case 2:
+					this.element.find('a').addClass("rec-download")
 					.prop('href', this.options.filename)
 					.html(
-							$('<i/>').addClass('fa fa-download').css('color',
-								'green')).append(' Scarica');
+						$('<i/>').addClass('fa fa-download').css('color', 'green'))
+						.append(' Scarica');
 				break;
-			case 9:
-				this.element.find('a').addClass("rec-failed").html(
-							$('<i/>').addClass('fa fa-warning')).append(' Errori');
+				case 9:
+					this.element.find('a').addClass("rec-failed")
+					.html(
+						$('<i/>').addClass('fa fa-warning')).append(' Errori');
 				break;
-		}
+			}
 	}
 });
-
-function poll_job(job_id, callback) {
-	$.getJSON('/api/jobs/' + job_id)
-		.done(function(data) {
-			if(data.job_status !== 'WIP') {
-				console.log("polling completed for job[" + job_id + "]", data);
-				callback(data);
-			} else {
-				setTimeout(function() { poll_job(job_id, callback); },
-					config.polling_interval);
-			}
-		});
-}
 
 function add_new_rec() {
 	//progress()
@@ -200,9 +187,9 @@ function stop_rec(rec, widget) {
 		return gen_rec(rec, widget);
 	});
 	stop_xhr.fail(function(res_update) {
-			var error = JSON.parse(res_update.responseText).message;
-			widget.option("errormsg", error);
-			widget.option("state", 9);
+		var error = JSON.parse(res_update.responseText).message;
+		widget.option("errormsg", error);
+		widget.option("state", 9);
 	});
 	return stop_xhr; //RecAPI.stop
 }

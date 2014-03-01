@@ -1,4 +1,4 @@
-/*global $*/
+/*global $, poll_job*/
 
 var form = {
 	MAX_MINS: 5*60, // 5 hours
@@ -42,6 +42,37 @@ var form = {
 	}
 };
 
+function click(widget) {
+	/*global RecAPI*/
+	var v = form.get_values();
+	RecAPI.fullcreate(v.name, v.start, v.end)
+	.done(function(res_create) {
+		console.log("ok, created");
+		RecAPI.generate(res_create.rec)
+		.done(function(res_gen) {
+			console.log("ok, generated", res_create);
+			//TODO: start polling
+			$('#download').thebutton('option', 'state', 'Wait');
+			poll_job(res_gen.job_id, function(data) {
+				if(data.job_status !== 'DONE') {
+					console.error("Job failed!", data);
+					widget.thebutton("option", "state", 'Failed');
+					widget.thebutton("option", "errormsg", data.exception);
+				} else {
+					widget.thebutton("option", "filename", res_gen.result);
+					widget.thebutton("option", "state", 'Download');
+				}
+			});
+		})
+		.fail(function() {
+			console.error("Oh shit, generate failed", res_create.rec);
+		});
+	})
+	.fail(function() {
+		console.error("Oh shit, fullcreate failed");
+	});
+}
+
 $(function() {
 	"use strict";
 	$( "#from-date" ).datepicker({
@@ -66,36 +97,18 @@ $(function() {
 		}
 	});
 	$('#to-date, #from-date').datepicker($.datepicker.regional.it);
+	$('#download').thebutton();
 
-	$('#form').ajaxForm({
-		beforeSubmit: function() {
-			console.log("check", form.check());
-			if(form.check().length > 0) {
-				console.log("Form not valid, aborting");
-				return false;
+	$('#download').click(function() {
+			if(!$('#download').hasClass('rec-run')) {
+				return;
 			}
-			return true;
-		},
-		success: function() {
-			/*global RecAPI*/
-			var v = form.get_values();
-			RecAPI.fullcreate(v.name, v.start, v.end)
-			.done(function(res) {
-				console.log("ok, created");
-				RecAPI.generate(res.rec)
-				.done(function(res) {
-					console.log("ok, generated", res);
-				})
-				.fail(function() {
-					console.error("Oh shit, generate failed", res.rec);
-				});
-			})
-			.fail(function() {
-				console.error("Oh shit, fullcreate failed");
-			});
-
-			return false;
-		}
+			var check = form.check();
+			if(check.length > 0) {
+				console.log("Errors in form", check);
+				return;
+			}
+			click($('#download'));
 	});
 });
 /* vim: set ts=2 sw=2 noet fdm=indent: */

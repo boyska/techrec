@@ -47,3 +47,17 @@ var RecAPI = {
 		return $.getJSON('/api/get/ongoing');
 	}
 };
+
+function poll_job(job_id, callback) {
+	$.getJSON('/api/jobs/' + job_id)
+	.done(function(data) {
+		if(data.job_status !== 'WIP') {
+			console.log("polling completed for job[" + job_id + "]", data);
+			callback(data);
+		} else {
+			setTimeout(function() { poll_job(job_id, callback); },
+								 config.polling_interval);
+		}
+	});
+}
+
