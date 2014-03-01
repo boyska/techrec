@@ -13,9 +13,9 @@ def get_timefile_exact(time):
     that work is done in get_timefile(time)
     '''
     return os.path.join(
-            get_config()['AUDIO_INPUT'],
-            time.strftime(get_config()['AUDIO_INPUT_FORMAT'])
-            )
+        get_config()['AUDIO_INPUT'],
+        time.strftime(get_config()['AUDIO_INPUT_FORMAT'])
+    )
 
 
 def round_timefile(exact):
@@ -84,20 +84,22 @@ def mp3_join(named_intervals, target):
     if endskip is not None:
         cmdline += ['-t', str(len(files)*3600 - (startskip + endskip))]
     cmdline += [target]
-    cmdline += ['-loglevel', 'warning']
     return cmdline
 
 
 def create_mp3(start, end, outfile, options={}, **kwargs):
-    p = Popen(mp3_join([(get_timefile(begin), start_cut, end_cut)
-                        for begin, start_cut, end_cut
-                        in get_files_and_intervals(start, end)],
-                       outfile))
+    intervals = [(get_timefile(begin), start_cut, end_cut)
+                 for begin, start_cut, end_cut
+                 in get_files_and_intervals(start, end)]
+    p = Popen(mp3_join(intervals, outfile) + get_config()['FFMPEG_OPTIONS'])
+    if os.path.exists(outfile):
+        raise OSError("file '%s' already exists" % outfile)
     if get_config()['FORGE_TIMEOUT'] == 0:
         p.wait()
     else:
         start = datetime.now()
-        while (datetime.now() - start).total_seconds() < get_config()['FORGE_TIMEOUT']:
+        while (datetime.now() - start).total_seconds() \
+                < get_config()['FORGE_TIMEOUT']:
             p.poll()
             if p.returncode is None:
                 sleep(1)
