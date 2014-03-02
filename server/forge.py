@@ -91,9 +91,13 @@ def create_mp3(start, end, outfile, options={}, **kwargs):
     intervals = [(get_timefile(begin), start_cut, end_cut)
                  for begin, start_cut, end_cut
                  in get_files_and_intervals(start, end)]
-    p = Popen(mp3_join(intervals, outfile) + get_config()['FFMPEG_OPTIONS'])
     if os.path.exists(outfile):
         raise OSError("file '%s' already exists" % outfile)
+    for path, _s, _e in intervals:
+        if not os.path.exists(path):
+            raise OSError("file '%s' does not exist; recording system broken?"
+                          % path)
+    p = Popen(mp3_join(intervals, outfile) + get_config()['FFMPEG_OPTIONS'])
     if get_config()['FORGE_TIMEOUT'] == 0:
         p.wait()
     else:
