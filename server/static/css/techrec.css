@@ -20,7 +20,7 @@
 }
 
 .pure-button-enorme {
-	font-size: 300%;
+	font-size: 300% !important;
 }
 .arancione {
 	color: darkorange;

@@ -1,10 +1,17 @@
 import os
+import sys
 from datetime import datetime
 import logging
 logger = logging.getLogger('server')
 from functools import partial
 
 from bottle import Bottle, request, static_file, redirect, abort, response
+botlog = logging.getLogger('bottle')
+botlog.setLevel(logging.INFO)
+botlog.addHandler(logging.StreamHandler(sys.stdout))
+import bottle
+bottle._stderr = lambda x: botlog.info(x.strip())
+del bottle
 
 from techrec import Rec, RecDB
 from processqueue import get_process_queue
