@@ -275,13 +275,58 @@ class RecServer:
                                          root='pages/'))
 
 
+class DebugAPI(Bottle):
+    '''
+    This application is useful for testing the webserver itself
+    '''
+    def __init__(self):
+        Bottle.__init__(self)
+        self.route('/sleep/:milliseconds', callback=self.sleep)
+        self.route('/cpusleep/:howmuch', callback=self.cpusleep)
+        self.route('/big/:exponent', callback=self.big)
+
+    def sleep(self, milliseconds):
+        import time
+        time.sleep(int(milliseconds)/1000.0)
+        return 'ok'
+
+    def cpusleep(self, howmuch):
+        out = ''
+        for i in xrange(int(howmuch) * (10**3)):
+            if i % 11234 == 0:
+                out += 'a'
+        return out
+
+    def big(self, exponent):
+        '''
+        returns a 2**n -1 string
+        '''
+        for i in xrange(int(exponent)):
+            yield str(i) * (2 ** i)
+
+    def help(self):
+        response.content_type = 'text/plain'
+        return '''
+    /sleep/<int:milliseconds> : sleep, than say "ok"
+    /cpusleep/<int:howmuch> : busysleep, than say "ok"
+    /big/<int:exponent> : returns a 2**n -1 byte content
+    '''
+
+
 def main_cmd(*args):
     """meant to be called from argparse"""
     c = RecServer()
     c._app.mount('/date', DateApp())
     c._app.mount('/api', RecAPI())
-    c._app.run(host=get_config()['HOST'], port=get_config()['PORT'],
-               debug=get_config()['DEBUG'])
+    if get_config()['DEBUG']:
+        c._app.mount('/debug', DebugAPI())
+
+    c._app.run(server=get_config()['WSGI_SERVER'],
+               host=get_config()['HOST'],
+               port=get_config()['PORT'],
+               debug=get_config()['DEBUG'],
+               **get_config()['WSGI_SERVER_OPTIONS']
+               )
 
 if __name__ == '__main__':
     from cli import common_pre
