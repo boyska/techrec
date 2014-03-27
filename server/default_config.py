@@ -2,8 +2,8 @@ HOST = 'localhost'
 PORT = '8000'
 WSGI_SERVER = 'wsgiref'
 WSGI_SERVER_OPTIONS = {}
-#WSGI_SERVER = 'gunicorn'
-#WSGI_SERVER_OPTIONS = {'workers': 4, 'worker_class': 'eventlet'}
+WSGI_SERVER = 'gunicorn'
+WSGI_SERVER_OPTIONS = {'workers': 4 }
 
 DEBUG = True
 DB_URI = 'sqlite:///techrec.db'

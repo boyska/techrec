@@ -6,6 +6,7 @@ logger = logging.getLogger('server')
 from functools import partial
 
 from bottle import Bottle, request, static_file, redirect, abort, response
+
 botlog = logging.getLogger('bottle')
 botlog.setLevel(logging.INFO)
 botlog.addHandler(logging.StreamHandler(sys.stdout))
