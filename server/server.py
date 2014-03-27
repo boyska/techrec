@@ -69,9 +69,10 @@ class DateApp(Bottle):
 
 
 class RecAPI(Bottle):
-    def __init__(self):
+    def __init__(self, app):
         Bottle.__init__(self)
         self._route()
+        self._app = app
         self.db = RecDB(get_config()['DB_URI'])
 
     def _route(self):
@@ -164,7 +165,7 @@ class RecAPI(Bottle):
             'name': filter(lambda c: c.isalpha(), rec.name)
         }
         self.db.update(rec.id, rec.serialize())
-        job_id = get_process_queue().submit(
+        job_id = self._app.pq.submit(
             create_mp3,
             start=rec.starttime,
             end=rec.endtime,
@@ -177,7 +178,7 @@ class RecAPI(Bottle):
 
     def check_job(self, job_id):
         try:
-            job = get_process_queue().check_job(job_id)
+            job = self._app.pq.check_job(job_id)
         except ValueError:
             abort(400, 'job_id not valid')
 
@@ -200,8 +201,8 @@ class RecAPI(Bottle):
 
     def running_jobs(self):
         res = {}
-        res['last_job_id'] = get_process_queue().last_job_id
-        res['running'] = get_process_queue().jobs.keys()
+        res['last_job_id'] = self._app.pq.last_job_id
+        res['running'] = self._app.pq.jobs.keys()
         return res
 
     def search(self, args=None):
@@ -253,6 +254,7 @@ class RecAPI(Bottle):
 class RecServer:
     def __init__(self):
         self._app = Bottle()
+        self._app.pq = get_process_queue()
         self._route()
 
         self.db = RecDB(get_config()['DB_URI'])
@@ -318,7 +320,7 @@ def main_cmd(*args):
     """meant to be called from argparse"""
     c = RecServer()
     c._app.mount('/date', DateApp())
-    c._app.mount('/api', RecAPI())
+    c._app.mount('/api', RecAPI(c._app))
     if get_config()['DEBUG']:
         c._app.mount('/debug', DebugAPI())
 

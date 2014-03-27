@@ -2,8 +2,16 @@ HOST = 'localhost'
 PORT = '8000'
 WSGI_SERVER = 'wsgiref'
 WSGI_SERVER_OPTIONS = {}
-WSGI_SERVER = 'gunicorn'
-WSGI_SERVER_OPTIONS = {'workers': 4 }
+### Beware: we use global objects (the processqueue); you can't use
+### worker_class=sync in gunicorn, and probably other similar deployment won't
+### work
+### A dirty check is:
+### * go to /old.html
+### * create something
+### * go to /api/jobs
+### * refresh a lot and see if the result is always the same
+#WSGI_SERVER = 'gunicorn'
+#WSGI_SERVER_OPTIONS = {'workers': 4, 'worker_class': 'eventlet' }
 
 DEBUG = True
 DB_URI = 'sqlite:///techrec.db'
