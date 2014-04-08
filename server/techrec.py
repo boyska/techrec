@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 import sys
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, inspect
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -72,8 +72,9 @@ class RecDB:
         self.err = ""
 
     def add(self, simplerecord):
-        print self.session.add( simplerecord )
-        self.commit()
+        s = self.get_session()
+        s.add( simplerecord )
+        s.commit()
         self.log.info("New Record: %s" % simplerecord)
         return ( simplerecord )
 
@@ -94,7 +95,7 @@ class RecDB:
             _rlist[0].name = rec["name"]
         self.log.debug("DB:: Update: data AFTER %s" % _rlist[0])
 
-        self.commit()
+        inspect(_rlist[0]).session.commit()
         self.log.debug("DB:: Update complete")
         return _rlist[0]
 
@@ -112,14 +113,19 @@ class RecDB:
             self.err = "multiple ID Found %s" % (_rlist)
             return False
 
-        self.session.delete(_rlist[0])
+        s = self.get_session()
+        s.delete(_rlist[0])
         logging.info("DB: Delete: delete complete")
-        self.commit()
+        s.commit()
         return True
 
     def commit(self):
         logging.info("DB: Commit!!")
         self.session.commit()
+
+    def get_session(self):
+        Session = sessionmaker(bind=self.engine)
+        return Session()
 
     def get_all(self, page=0, page_size=PAGESIZE):
         return self._search(page=page, page_size=page_size)
@@ -135,14 +141,14 @@ class RecDB:
 
     def _query_ongoing(self, query=None):
         if query is None:
-            query = self.session.query(Rec)
+            query = self.get_session().query(Rec)
         return query.filter(Rec.filename == None)
 
 
 
     def _query_older(self, delta, query=None):
         if query is None:
-            query = self.session.query(Rec)
+            query = self.get_session().query(Rec)
         return query.filter(Rec.endtime < datetime.now() - delta)
 
 
@@ -174,7 +180,7 @@ class RecDB:
             "DB: Search => id:%s name:%s starttime:%s endtime=%s" %
             (_id, name, starttime, endtime))
 
-        query = self.session.query(Rec)
+        query = self.get_session().query(Rec)
         query = self._query_generic(query, _id, name, starttime,
                                     endtime)
         query = self._query_page(query, page, page_size)

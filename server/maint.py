@@ -1,6 +1,8 @@
 import sys
 import logging
 
+from sqlalchemy import inspect
+
 from config_manager import get_config
 from techrec import RecDB
 
@@ -16,7 +18,10 @@ def cleanold_cmd(options):
     else:
         for rec in res:
             logging.info("Deleting " + str(rec))
-            db.session.delete(rec)
-            db.commit()
+            s = inspect(rec).session
+            s.delete(rec)
+            s.commit()
         logging.info("Cleanold complete: %d deleted" % count)
     sys.exit(0)
+
+# vim: set ai ts=4 sw=4 et:
