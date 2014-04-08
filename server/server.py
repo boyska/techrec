@@ -196,6 +196,13 @@ class RecAPI(Bottle):
                 except Exception as exc:
                     r = ret('FAILED')
                     r['exception'] = str(exc)
+                    import traceback
+                    tb = traceback.format_exc()
+                    logger.warning(tb)
+                    if get_config()['DEBUG']:
+                        r['exception'] = "%s: %s" % (str(exc), tb)
+                        r['traceback'] = tb
+
                     return r
             return ret('WIP')
 
@@ -336,3 +343,5 @@ if __name__ == '__main__':
     common_pre()
     logger.warn("Usage of server.py is deprecated; use cli.py")
     main_cmd()
+
+# vim: set ts=4 sw=4 et ai ft=python:
