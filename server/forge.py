@@ -59,8 +59,7 @@ def mp3_join(named_intervals, target):
     This function make the (quite usual) assumption that the only start_cut (if
     any) is at the first file, and the last one is at the last file
     '''
-    # TODO: ffmpeg binary should be configurable
-    ffmpeg = 'ffmpeg'  # binary name
+    ffmpeg = get_config()['FFMPEG_PATH']
     startskip = None
     endskip = None
     files = []

@@ -22,3 +22,4 @@ AUDIO_OUTPUT_FORMAT = 'techrec-%(time)s-%(name)s.mp3'
 FORGE_TIMEOUT = 20
 FORGE_MAX_DURATION = 3600*5
 FFMPEG_OPTIONS = ['-loglevel', 'warning', '-n']
+FFMPEG_PATH = 'ffmpeg'
