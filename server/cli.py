@@ -34,6 +34,19 @@ def pre_check_user():
     if os.geteuid() == 0:
         yield "You're running as root; this is dangerous"
 
+def pre_check_ffmpeg():
+    path = get_config()['FFMPEG_PATH']
+    if not path.startswith('/'):
+        yield "FFMPEG_PATH is not absolute: %s" % path
+        from subprocess import check_output
+        try:
+            check_output([path, '-version'])
+        except OSError:
+            yield "FFMPEG not found as " + path
+    else:
+        if not os.path.exists(path):
+            yield "FFMPEG not found in " + path
+
 
 class DateTimeAction(Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -45,7 +58,7 @@ class DateTimeAction(Action):
 
 
 def common_pre():
-    prechecks = [pre_check_user, pre_check_permissions]
+    prechecks = [pre_check_user, pre_check_permissions, pre_check_ffmpeg]
     configs = ['default_config.py']
     if 'TECHREC_CONFIG' in os.environ:
         for conf in os.environ['TECHREC_CONFIG'].split(':'):
