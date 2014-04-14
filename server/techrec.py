@@ -15,10 +15,6 @@ from config_manager import get_config
 
 PAGESIZE = 10
 
-"""
-This class describe a single Record (Rec() class) and the
-records manager (RecDB() class)
-"""
 Base = declarative_base()
 
 
@@ -99,7 +95,7 @@ class RecDB:
             _rlist[0].name = rec["name"]
         self.log.debug("DB:: Update: data AFTER %s" % _rlist[0])
 
-        inspect(_rlist[0]).session.commit()
+        self.get_session(_rlist[0]).commit()
         self.log.debug("DB:: Update complete")
         return _rlist[0]
 
@@ -127,9 +123,12 @@ class RecDB:
         logging.info("DB: Commit!!")
         self.session.commit()
 
-    def get_session(self):
-        Session = sessionmaker(bind=self.engine)
-        return Session()
+    def get_session(self, rec=None):
+        if rec is None:
+            Session = sessionmaker(bind=self.engine)
+            return Session()
+        else:
+            return inspect(rec).session
 
     def get_all(self, page=0, page_size=PAGESIZE):
         return self._search(page=page, page_size=page_size)

@@ -164,7 +164,7 @@ class RecAPI(Bottle):
             'time': rec.starttime.strftime('%y%m%d_%H%M'),
             'name': filter(lambda c: c.isalpha(), rec.name)
         }
-        self.db.update(rec.id, rec.serialize())
+        self.db.get_session(rec).commit()
         job_id = self._app.pq.submit(
             create_mp3,
             start=rec.starttime,
