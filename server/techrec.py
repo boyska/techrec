@@ -64,7 +64,7 @@ class RecDB:
         logging.getLogger('sqlalchemy.pool').setLevel(logging.FATAL)
         logging.getLogger('sqlalchemy.orm').setLevel(logging.FATAL)
 
-        Base.metadata.create_all(self.engine) # create Database
+        Base.metadata.create_all(self.engine)  # create Database
 
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
@@ -80,7 +80,7 @@ class RecDB:
 
     def update(self, id, rec):
 
-        ## TODO: rlist = results list
+        # TODO: rlist = results list
         _rlist = self._search(_id=id)
         if not len(_rlist) == 1:
             raise ValueError('Too many recs with id=%s' % id)
@@ -149,14 +149,25 @@ class RecDB:
         The meaning is "a query that makes sense to stop"
         '''
         delta = timedelta(seconds=get_config()['FORGE_MAX_DURATION'])
-        return self._query_not_saved(query).filter(Rec.starttime >
-                datetime.now() - delta)
+        return self._query_newer(delta, self._query_not_saved(query))
 
     def _query_not_saved(self, query=None):
         '''Still not saved'''
         if query is None:
             query = self.get_session().query(Rec)
         return query.filter(Rec.filename == None)
+
+    def _query_saved(self, query=None):
+        '''Still not saved'''
+        if query is None:
+            query = self.get_session().query(Rec)
+        return query.filter(Rec.filename != None)
+
+    def _query_newer(self, delta, query=None):
+        '''Get Rec older than delta seconds'''
+        if query is None:
+            query = self.get_session().query(Rec)
+        return query.filter(Rec.starttime > datetime.now() - delta)
 
     def _query_older(self, delta, query=None):
         '''Get Rec older than delta seconds'''
@@ -213,21 +224,22 @@ if __name__ == "__main__":
             print "Record: %s" % record
 
     db = RecDB()
-    _mytime = datetime(2014,05,23,15,12,17)
-    _endtime = datetime(2014,05,24,17,45,17)
+    _mytime = datetime(2014, 05, 23, 15, 12, 17)
+    _endtime = datetime(2014, 05, 24, 17, 45, 17)
 
     a = Rec(name="Mimmo1", starttime=_mytime, endtime=_endtime)
-    printall( db._search() )
+    printall(db._search())
     sys.exit("End test job")
 
     # a = Rec(name="Mimmo1", starttime=_mytime, endtime=None)
-    print "Aggiunto", db.add( a )
-    printall( db.get_all(page_size=5,page=0) )
+    print "Aggiunto", db.add(a)
+    printall(db.get_all(page_size=5, page=0))
 
     print "Mimmo "
-    printall( db._search(name="Mimmo1"))
+    printall(db._search(name="Mimmo1"))
     print "Search"
-    printall( db._search(name="Mimmo1",starttime=datetime(2014,05,24,15,16,1) ))
+    printall(db._search(name="Mimmo1",
+                        starttime=datetime(2014, 05, 24, 15, 16, 1) ))
     a = db.get_by_id(5)
     a.start()
     db.delete(1)
