@@ -3,7 +3,10 @@ import sys
 from argparse import ArgumentParser, Action
 from datetime import datetime
 import logging
+logging.basicConfig(stream=sys.stdout)
 logger = logging.getLogger('cli')
+
+
 CWD = os.getcwd()
 
 import forge
@@ -76,7 +79,7 @@ def common_pre():
 
     for check in prechecks:
         for warn in check():
-            logging.warn(warn)
+            logger.warn(warn)
 
 if __name__ == "__main__":
     parser = ArgumentParser(description='creates mp3 from live recordings')

@@ -115,12 +115,12 @@ class RecDB:
 
         s = self.get_session()
         s.delete(_rlist[0])
-        logging.info("DB: Delete: delete complete")
+        self.log.info("Delete: delete complete")
         s.commit()
         return True
 
     def commit(self):
-        logging.info("DB: Commit!!")
+        self.log.info("Commit!!")
         self.session.commit()
 
     def get_session(self, rec=None):
