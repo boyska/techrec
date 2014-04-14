@@ -1,3 +1,6 @@
+'''
+This module contains DB logic
+'''
 import logging
 from datetime import datetime, timedelta
 
@@ -8,6 +11,7 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime, inspect
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
+from config_manager import get_config
 
 PAGESIZE = 10
 
@@ -140,17 +144,26 @@ class RecDB:
         return query.all()
 
     def _query_ongoing(self, query=None):
+        '''
+        Not terminated AND recent.
+
+        The meaning is "a query that makes sense to stop"
+        '''
+        delta = timedelta(seconds=get_config()['FORGE_MAX_DURATION'])
+        return self._query_not_saved(query).filter(Rec.starttime >
+                datetime.now() - delta)
+
+    def _query_not_saved(self, query=None):
+        '''Still not saved'''
         if query is None:
             query = self.get_session().query(Rec)
         return query.filter(Rec.filename == None)
 
-
-
     def _query_older(self, delta, query=None):
+        '''Get Rec older than delta seconds'''
         if query is None:
             query = self.get_session().query(Rec)
-        return query.filter(Rec.endtime < datetime.now() - delta)
-
+        return query.filter(Rec.starttime < datetime.now() - delta)
 
     def _query_page(self, query, page=0, page_size=PAGESIZE):
         if page_size:
