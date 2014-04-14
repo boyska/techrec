@@ -84,6 +84,7 @@ class RecAPI(Bottle):
         self.get('/', callback=self.help)
         self.get('/get/search', callback=self.search)
         self.get('/get/ongoing', callback=self.get_ongoing)
+        self.get('/get/archive', callback=self.get_archive)
         self.get('/jobs', callback=self.running_jobs)
         self.get('/jobs/<job_id:int>', callback=self.check_job)
 
@@ -233,6 +234,10 @@ class RecAPI(Bottle):
         return {rec.id: rec_sanitize(rec)
                 for rec in self.db.get_ongoing()}
 
+    def get_archive(self):
+        return {rec.id: rec_sanitize(rec)
+                for rec in self.db.get_archive_recent()}
+
     # @route('/help')
     def help(self):
         return "<h1>help</h1><hr/>\
@@ -282,6 +287,9 @@ class RecServer:
                                          root='pages/'))
         self._app.route('/old.html',
                         callback=partial(static_file, 'old.html',
+                                         root='pages/'))
+        self._app.route('/archive.html',
+                        callback=partial(static_file, 'archive.html',
                                          root='pages/'))
 
 

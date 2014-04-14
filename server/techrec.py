@@ -142,6 +142,11 @@ class RecDB:
         query = self._query_older(timedelta(seconds=minseconds), query)
         return query.all()
 
+    def get_archive_recent(self):
+        query = self._query_saved()
+        query = self._query_newer(timedelta(days=15), query)
+        return query.all()
+
     def _query_ongoing(self, query=None):
         '''
         Not terminated AND recent.

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>TechREC</title>
+	<link rel="icon" href="/static/img/icon.ico" />
+	<link rel="stylesheet" type="text/css" href="/static/css/pure-min.css" />
+	<link rel="stylesheet" type="text/css" href="/static/css/pure-skin-porpora.css" />
+	<link rel="stylesheet" type="text/css" href="/static/css/jquery-ui.min.css" />
+	<link rel="stylesheet" type="text/css" href="/static/css/techrec.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/font-awesome.css" />
+
+	<script src="/static/js/jquery-1.9.1.min.js"></script>
+	<script src="/static/js/jquery-ui.min.js"></script>
+	<script src="/static/js/jquery.ui.datepicker-it.min.js"></script>
+	<script src="/static/js/rec.js"></script>
+	<script>
+$(function() {
+		"use strict";
+		RecAPI.get_archive().success(function(archive) {
+			$.each(archive, function(idx, rec) {
+				$('#ongoing-recs-table tbody')
+				.append($('<tr/>').append($('<td/>')
+						.append($('<a/>').prop('href', '/output/' + rec.filename).text(rec.filename))));
+				});
+			});
+		});
+	</script>
+</head>
+
+<body class="pure-skin-porpora">
+
+<div class="pure-menu pure-menu-open pure-menu-horizontal">
+	<a href="#" class="pure-menu-heading">TechRec</a>
+	<ul>
+		<li><a href="new.html">Diretta</a></li>
+		<li><a href="old.html">Vecchie</a></li>
+		<li class="pure-menu-selected"><a href="archive.html">Archivio</a></li>
+	</ul>
+</div>
+
+<h1>Registrazioni gi&agrave; completate</h1>
+<div id="rec-normal" class="pure-g-r">
+	<div class="pure-u-1-8"></div>
+	<div class="pure-u-3-4">
+		<table width="100%" class="pure-table pure-table-horizontal pure-table-striped"
+			id="ongoing-recs-table" style="margin-top: 3em;">
+			<tbody>
+			<tr>
+				<th>Filename</th>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<div class="pure-u-1-8"></div>
+</div>
+
+</body>
+</html>
+
+<!-- vim: set ts=2 sw=2 noet: -->

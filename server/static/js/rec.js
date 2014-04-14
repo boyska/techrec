@@ -43,6 +43,9 @@ var RecAPI = {
 			id: rec.id
 		});
 	},
+	get_archive: function() {
+		return $.getJSON('/api/get/archive');
+	},
 	get_ongoing: function() {
 		return $.getJSON('/api/get/ongoing');
 	}
