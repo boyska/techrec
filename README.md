@@ -10,6 +10,7 @@ files "cutting/pasting" with ffmpeg.
 Features
 =========
 
+* little system dependencies: python2 and ffmpeg
 * The interface is extremely simple to use
 * You can have nested recording (ie: to record an interview inside of a whole
   show)
@@ -19,6 +20,18 @@ Features
   browser to remain open, or any kind of persistence client-side: server-side
   does it all. It also means that authorization must be done on another layer
   (for example, your webserver could add a Basic Auth)
+
+How does it work
+================
+
+We suppose that you have a continous recording of your radio broadcasting.
+What techrec does is taking files from this directory and "cutting/pasting"
+parts of them. This can boil down to something like
+
+```sh
+ffmpeg -i concat:2014-20-01-00-00.mp3|2014-20-01-00-01.mp3 -acodec copy -ss 160 -t 1840 foo.mp3
+```
+
 
 Implementation details
 ======================
@@ -31,4 +44,6 @@ Jobs are not dispatched using stuff like celery, but with a thin wrapper over
 possible.
 
 The encoding part is delegated to `ffmpeg`, but the code is really modular so
-changing this is a breeze.
+changing this is a breeze. To be quicker and avoid the quality issues related
+to reencoding, the codec "copy" is used: this means that input and output must
+have the same format.
