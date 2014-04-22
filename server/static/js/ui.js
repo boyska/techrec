@@ -1,4 +1,44 @@
 /*global $*/
+function time_changer_dialog(d, changed_callback) {
+	//d is a Date object
+	var dlg_html = '<div> \
+								 <form action="#"> \
+								 <input name="h" size="2" maxlength="2" type="number" min="0" max="23"> \
+								 <input name="m" size="2" maxlength="2" type="number" min="0" max="59"> \
+								 <input name="s" size="2" maxlength="2" type="number" min="0" max="59"> \
+								 </form> \
+								 </div>';
+
+	var $dlg = $( $.parseHTML(dlg_html) );
+	$('[name=h]', $dlg).val(d.getHours() );
+	$('[name=m]', $dlg).val(d.getMinutes() );
+	$('[name=s]', $dlg).val(d.getSeconds() );
+	$dlg.dialog( {
+		title: "Modifica inizio",
+		buttons:
+	{
+		"Ok":function() {
+			$(this).dialog( "close" );
+			if(changed_callback === undefined) {
+				return;
+			}
+			newd = new Date(d.getTime());
+			newd.setHours($('[name=h]', $dlg).val());
+			newd.setMinutes($('[name=m]', $dlg).val());
+			newd.setSeconds($('[name=s]', $dlg).val());
+			if(newd.getTime() === d.getTime()) {
+				console.debug("Time not changed, discarding");
+				return;
+			}
+			changed_callback(newd); //FIXME: crea data a partire dal form
+		},
+		"Annulla": function() {
+			$(this).dialog("close");
+		}
+	}
+	}).dialog('open');
+}
+
 $.widget("ror.thebutton", {
 	options: {
 		state: 'Create',

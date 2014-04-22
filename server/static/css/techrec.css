@@ -22,9 +22,11 @@
 .pure-button-enorme {
 	font-size: 300% !important;
 }
-
 .pure-button-small {
 	font-size: 85% !important;
+}
+.pure-button-compact {
+  padding: 0.2em 0.5em !important;
 }
 .arancione {
 	color: darkorange;

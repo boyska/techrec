@@ -5,31 +5,57 @@ $.widget("ror.countclock", {
 	options: {
 		errormsg: null,
 		since: null,
+		editable:true,
 		to: null
 	},
 	_create: function() {
+		"use strict";
 		this._update();
 		//TODO: aggiungi conto secondi/minuti passati
+
+		var widg = this;
+		this.element.on('click', '.countclock-edit-time', function() {
+			if(widg.options.editable === true) {
+				widg._change_starttime(widg.options.since);
+			}
+		});
 	},
+
+	_change_starttime: function ( since ) {
+		"use strict";
+		var widget = this;
+		time_changer_dialog(since, function(newsince) {
+			widget._trigger("change", null, { since: newsince })
+		});
+	},
+
 	_setOption: function(key, value) {
 		this.options[key] = value;
 		this._update();
 	},
+
 	_update: function() {
+		"use strict";
+		var text = "";
 		if(this.options.since !== null) {
 			if(this.options.to === null) {
-				this.element.text("Registrando da " +
-					config.datetimeformat(this.options.since)
-					);
+				text = "Registrando da " + config.datetimeformat(this.options.since);
 			} else {
-				this.element.text("Registrando da " +
+				text = "Registrando da " +
 					config.datetimeformat(this.options.since) +
-					" a " + 
-					config.datetimeformat(this.options.to)
-					);
+					" a " +
+					config.datetimeformat(this.options.to);
+					this.options.editable = false;
 			}
-		} else {
-			this.element.text('');
+		}
+		this.element.text(text);
+		if(this.options.editable) {
+			var btn = $('<span/>');
+			btn.addClass('pure-button pure-button-compact countclock-edit-time');
+			btn.css('margin-left', '0.5em');
+
+			btn.append($('<i/>').addClass('fa fa-pencil'));
+			this.element.append(btn);
 		}
 	}
 });
@@ -98,14 +124,27 @@ $.widget("ror.ongoingrec", {
 		}
 		this._update();
 	},
-	_update: function() {
-		var rec = this.options.rec;
-		this.element.find('input').val(rec.name);
-		this.element.find(':ror-countclock').countclock("option", "since",
-									rec.starttime !== null ? config.date_read(rec.starttime) :	null);
+
+        _update: function() {
+          var rec = this.options.rec;
+          this.element.find('input').val(rec.name);
+          this.element.find(':ror-countclock').countclock("option", "since",
+              rec.starttime !== null ? config.date_read(rec.starttime) :
+              null).on("countclockchange",
+              function(evt, data) {
+                count_widg = this;
+                console.log(this);
+                console.log(rec.starttime, data.since.getTime() / 1000);
+                rec.starttime = data.since.getTime() / 1000;
+                RecAPI.update(rec.id, rec).done(
+                  function() {
+                    $(count_widg).countclock('option', 'since', data.since);
+                  }).fail(console.error);
+              });
+
 		if(this.options.state > 0) {
-			this.element.find(':ror-countclock').countclock("option", "to", 
-																											rec.endtime !== null ? config.date_read(rec.endtime) : null
+			this.element.find(':ror-countclock').countclock("option", "to",
+																											rec.endtime !== null ? new Date(rec.endtime*1000) : null
 																											);
 		} else {
 			this.element.find(':ror-countclock').countclock("option", "to", null);
