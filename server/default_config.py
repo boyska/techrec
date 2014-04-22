@@ -1,6 +1,13 @@
+import logging
 HOST = 'localhost'
 PORT = '8000'
-WSGI_SERVER = 'paste'
+# pastelog is just "paste", but customized to accept logging options
+WSGI_SERVER = 'pastelog'
+# these are pastelog-specific options for logging engine
+TRANSLOGGER_OPTS = {
+        'logger_name': 'accesslog',
+        'set_logger_level': logging.WARNING,
+        'setup_console_handler': False }
 WSGI_SERVER_OPTIONS = {}
 
 DEBUG = True

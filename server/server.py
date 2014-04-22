@@ -6,13 +6,12 @@ logger = logging.getLogger('server')
 from functools import partial
 
 from bottle import Bottle, request, static_file, redirect, abort, response
+import bottle
 
 botlog = logging.getLogger('bottle')
 botlog.setLevel(logging.INFO)
 botlog.addHandler(logging.StreamHandler(sys.stdout))
-import bottle
 bottle._stderr = lambda x: botlog.info(x.strip())
-del bottle
 
 from techrec import Rec, RecDB
 from processqueue import get_process_queue
@@ -330,6 +329,16 @@ class DebugAPI(Bottle):
     /big/<int:exponent> : returns a 2**n -1 byte content
     '''
 
+class PasteLoggingServer(bottle.PasteServer):
+    def run(self, handler): # pragma: no cover
+        from paste import httpserver
+        from paste.translogger import TransLogger
+        handler = TransLogger(handler, **self.options['translogger_opts'])
+        del self.options['translogger_opts']
+        httpserver.serve(handler, host=self.host, port=str(self.port),
+                         **self.options)
+bottle.server_names['pastelog'] = PasteLoggingServer
+
 
 def main_cmd(*args):
     """meant to be called from argparse"""
@@ -339,10 +348,17 @@ def main_cmd(*args):
     if get_config()['DEBUG']:
         c._app.mount('/debug', DebugAPI())
 
-    c._app.run(server=get_config()['WSGI_SERVER'],
+    server = get_config()['WSGI_SERVER']
+    if server == 'pastelog':
+        from paste.translogger import TransLogger
+        get_config()['WSGI_SERVER_OPTIONS']['translogger_opts'] = \
+                get_config()['TRANSLOGGER_OPTS']
+
+    c._app.run(server=server,
                host=get_config()['HOST'],
                port=get_config()['PORT'],
                debug=get_config()['DEBUG'],
+               quiet=True,  # this is to hide access.log style messages
                **get_config()['WSGI_SERVER_OPTIONS']
                )
 
