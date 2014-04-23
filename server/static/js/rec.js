@@ -4,6 +4,9 @@ var config = {
 	date_write: function(d) {
 		return Math.floor(d.getTime() / 1000);
 	},
+	date_read: function(unix_timestamp) {
+		return new Date(unix_timestamp * 1000);
+	},
 	datetimeformat: function(d) {
 		if(Math.abs(new Date() - d) > (3*60*60*1000)) {
 			return d.toLocaleString();

@@ -145,6 +145,7 @@ class RecDB:
     def get_archive_recent(self):
         query = self._query_saved()
         query = self._query_newer(timedelta(days=15), query)
+        query = query.order_by(Rec.starttime.desc())
         return query.all()
 
     def _query_ongoing(self, query=None):

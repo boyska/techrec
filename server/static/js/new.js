@@ -102,10 +102,10 @@ $.widget("ror.ongoingrec", {
 		var rec = this.options.rec;
 		this.element.find('input').val(rec.name);
 		this.element.find(':ror-countclock').countclock("option", "since",
-									rec.starttime !== null ? new Date(rec.starttime*1000) :	null);
+									rec.starttime !== null ? config.date_read(rec.starttime) :	null);
 		if(this.options.state > 0) {
 			this.element.find(':ror-countclock').countclock("option", "to", 
-																											rec.endtime !== null ? new Date(rec.endtime*1000) : null
+																											rec.endtime !== null ? config.date_read(rec.endtime) : null
 																											);
 		} else {
 			this.element.find(':ror-countclock').countclock("option", "to", null);
