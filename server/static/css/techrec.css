@@ -22,6 +22,10 @@
 .pure-button-enorme {
 	font-size: 300% !important;
 }
+
+.pure-button-small {
+	font-size: 85% !important;
+}
 .arancione {
 	color: darkorange;
 }
@@ -37,4 +41,15 @@
 }
 .ongoing-one:nth-child(odd) {
 	background: #dddddd;
+}
+
+/* Archive */
+#ongoing-recs-table td {
+	text-align: center;
+}
+#ongoing-recs-table td:first-child {
+	text-align: left;
+}
+#ongoing-recs-table td:last-child {
+	text-align: right;
 }

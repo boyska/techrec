@@ -53,8 +53,10 @@ $(function() {
 						parseInt(rec.starttime, 10)).toLocaleString()
 					);
 				var duration = $('<td/>').text(delta(rec.endtime, rec.starttime));
-				var fn = $('<td/>').append($('<a/>').prop('href', '/output/' +
-						rec.filename).text(rec.filename));
+				var fn = $("<td/>").append($("<a/>").prop("href", "/output/" +
+						rec.filename).addClass("pure-button pure-button-small")
+					.html( $("<i/>").addClass("fa fa-download").css("color", "green"))
+					.append(" Scarica") );
 				var row = $('<tr/>').append(name).append(start).append(duration).append(fn);
 				$('#ongoing-recs-table tbody').append(row);
 			}
@@ -85,7 +87,7 @@ $(function() {
 				<th>Nome</th>
 				<th>Inizio</th>
 				<th>Durata</th>
-				<th>Filename</th>
+				<th>File</th>
 				</tr>
 			</tbody>
 		</table>
