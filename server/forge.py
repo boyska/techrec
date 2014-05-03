@@ -49,7 +49,7 @@ def get_files_and_intervals(start, end, rounder=round_timefile):
         start = begin + timedelta(hours=1)
 
 
-def mp3_join(named_intervals, target):
+def mp3_join(named_intervals):
     '''
     Note that these are NOT the intervals returned by get_files_and_intervals,
     as they do not supply a filename, but only a datetime.
@@ -83,7 +83,6 @@ def mp3_join(named_intervals, target):
         startskip = 0
     if endskip is not None:
         cmdline += ['-t', str(len(files)*3600 - (startskip + endskip))]
-    cmdline += [target]
     return cmdline
 
 
@@ -97,7 +96,35 @@ def create_mp3(start, end, outfile, options={}, **kwargs):
         if not os.path.exists(path):
             raise OSError("file '%s' does not exist; recording system broken?"
                           % path)
-    p = Popen(mp3_join(intervals, outfile) + get_config()['FFMPEG_OPTIONS'])
+
+    # metadata date/time formatted according to
+    # https://wiki.xiph.org/VorbisComment#Date_and_time
+    metadata = {}
+    if outfile.endswith('.mp3'):
+        metadata['TRDC'] = start.replace(microsecond=0).isoformat()
+        metadata['RECORDINGTIME'] = metadata['TRDC']
+        metadata['ENCODINGTIME'] = datetime.now().replace(
+            microsecond=0).isoformat()
+    else:
+        metadata['DATE'] = start.replace(microsecond=0).isoformat()
+    metadata['ENCODER'] = 'https://github.com/boyska/techrec'
+    if 'title' in options:
+        metadata['TITLE'] = options['title']
+    if options.get('license_uri', None) is not None:
+        metadata['RIGHTS-DATE'] = start.strftime('%Y-%m')
+        metadata['RIGHTS-URI'] = options['license_uri']
+    if 'extra_tags' in options:
+        metadata.update(options['extra_tags'])
+    metadata_list = []
+    for tag, value in metadata.items():
+        if '=' in tag:
+            logging.error('Received a tag with "=" inside, skipping')
+            continue
+        metadata_list.append('-metadata')
+        metadata_list.append('%s=%s' % (tag, value))
+
+    p = Popen(mp3_join(intervals) + metadata_list +
+              get_config()['FFMPEG_OPTIONS'] + [outfile])
     if get_config()['FORGE_TIMEOUT'] == 0:
         p.wait()
     else:

@@ -169,7 +169,13 @@ class RecAPI(Bottle):
             create_mp3,
             start=rec.starttime,
             end=rec.endtime,
-            outfile=os.path.join(get_config()['AUDIO_OUTPUT'], rec.filename))
+            outfile=os.path.join(get_config()['AUDIO_OUTPUT'], rec.filename),
+            options={
+                'title': rec.name,
+                'license_uri': get_config()['TAG_LICENSE_URI'],
+                'extra_tags': get_config()['TAG_EXTRA']
+            }
+        )
         logger.debug("SUBMITTED: %d" % job_id)
         return self.rec_msg("Aggiornamento completato!",
                             job_id=job_id,
@@ -271,7 +277,7 @@ class RecServer:
         self.db = RecDB(get_config()['DB_URI'])
 
     def _route(self):
-        ## Static part of the site
+        # Static part of the site
         self._app.route('/output/<filepath:path>',
                         callback=lambda filepath:
                         static_file(filepath,
@@ -329,8 +335,9 @@ class DebugAPI(Bottle):
     /big/<int:exponent> : returns a 2**n -1 byte content
     '''
 
+
 class PasteLoggingServer(bottle.PasteServer):
-    def run(self, handler): # pragma: no cover
+    def run(self, handler):  # pragma: no cover
         from paste import httpserver
         from paste.translogger import TransLogger
         handler = TransLogger(handler, **self.options['translogger_opts'])
@@ -352,7 +359,7 @@ def main_cmd(*args):
     if server == 'pastelog':
         from paste.translogger import TransLogger
         get_config()['WSGI_SERVER_OPTIONS']['translogger_opts'] = \
-                get_config()['TRANSLOGGER_OPTS']
+            get_config()['TRANSLOGGER_OPTS']
 
     c._app.run(server=server,
                host=get_config()['HOST'],

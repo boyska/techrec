@@ -20,3 +20,7 @@ FORGE_TIMEOUT = 20
 FORGE_MAX_DURATION = 3600*5
 FFMPEG_OPTIONS = ['-loglevel', 'warning', '-n']
 FFMPEG_PATH = 'ffmpeg'
+# tag:value pairs
+TAG_EXTRA = {}
+# LICENSE URI is special because date need to be added
+TAG_LICENSE_URI = None
