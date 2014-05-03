@@ -73,8 +73,8 @@ $.widget("ror.ongoingrec", {
 		var widget = this;
 		var rec = this.options.rec;
 		var view = this.element.data('rec', rec).addClass('ongoing-rec').append(
-			$('<td/>').append(
-				$('<input/>').attr('placeholder', 'Nome trasmissione')
+			$('<td/>').addClass('pure-form').append(
+				$('<input/>').attr('type', 'text').attr('placeholder', 'Nome trasmissione')
 		)
 		).append( $('<td class="ongoingrec-time"/>').countclock()).append(
 		$('<td/>').append($('<a/>')
