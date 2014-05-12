@@ -12,6 +12,8 @@ ten = datetime(2014, 5, 30, 22)
 
 get_config()['AUDIO_INPUT'] = ''
 get_config()['AUDIO_INPUT_FORMAT'] = '%Y-%m/%d/%Y-%m-%d-%H-%M-%S.mp3'
+get_config()['FFMPEG_PATH'] = 'ffmpeg'
+get_config()['FFMPEG_OUT_CODEC'] = ['-acodec', 'copy']
 
 
 def minutes(n):
@@ -21,14 +23,14 @@ def minutes(n):
 def seconds(n):
     return timedelta(seconds=n)
 
-## timefile
+# timefile
 
 
 def test_timefile_exact():
     eq_(get_timefile_exact(eight),
         '2014-05/30/2014-05-30-20-00-00.mp3')
 
-## Rounding
+# Rounding
 
 
 def test_rounding_similarity():
@@ -41,7 +43,7 @@ def test_rounding_value():
     eq_(round_timefile(eight + minutes(20)), eight)
 
 
-## Rounding + timefile
+# Rounding + timefile
 
 
 def test_timefile_alreadyround():
@@ -53,7 +55,7 @@ def test_timefile_toround():
     eq_(get_timefile(eight + minutes(20)),
         '2014-05/30/2014-05-30-20-00-00.mp3')
 
-## Intervals
+# Intervals
 
 
 @raises(ValueError)
@@ -161,30 +163,30 @@ def test_intervals_left_2():
 
 
 def test_mp3_1():
-    eq_(' '.join(mp3_join((('a', 0, 0),), 'foo.mp3')),
-        'ffmpeg -i concat:a -acodec copy foo.mp3')
+    eq_(' '.join(mp3_join((('a', 0, 0),))),
+        'ffmpeg -i concat:a -acodec copy')
 
 
 def test_mp3_1_left():
-    eq_(' '.join(mp3_join((('a', 160, 0),), 'foo.mp3')),
-        'ffmpeg -i concat:a -acodec copy -ss 160 foo.mp3')
+    eq_(' '.join(mp3_join((('a', 160, 0),))),
+        'ffmpeg -i concat:a -acodec copy -ss 160')
 
 
 def test_mp3_1_right():
-    eq_(' '.join(mp3_join((('a', 0, 1600),), 'foo.mp3')),
-        'ffmpeg -i concat:a -acodec copy -t 2000 foo.mp3')
+    eq_(' '.join(mp3_join((('a', 0, 1600),))),
+        'ffmpeg -i concat:a -acodec copy -t 2000')
 
 
 def test_mp3_1_leftright():
-    eq_(' '.join(mp3_join((('a', 160, 1600),), 'foo.mp3')),
-        'ffmpeg -i concat:a -acodec copy -ss 160 -t 1840 foo.mp3')
+    eq_(' '.join(mp3_join((('a', 160, 1600),))),
+        'ffmpeg -i concat:a -acodec copy -ss 160 -t 1840')
 
 
 def test_mp3_2():
-    eq_(' '.join(mp3_join((('a', 0, 0), ('b', 0, 0)), 'foo.mp3')),
-        'ffmpeg -i concat:a|b -acodec copy foo.mp3')
+    eq_(' '.join(mp3_join((('a', 0, 0), ('b', 0, 0)))),
+        'ffmpeg -i concat:a|b -acodec copy')
 
 
 def test_mp3_2_leftright():
-    eq_(' '.join(mp3_join((('a', 1000, 0), ('b', 0, 1600)), 'foo.mp3')),
-        'ffmpeg -i concat:a|b -acodec copy -ss 1000 -t 4600 foo.mp3')
+    eq_(' '.join(mp3_join((('a', 1000, 0), ('b', 0, 1600)))),
+        'ffmpeg -i concat:a|b -acodec copy -ss 1000 -t 4600')

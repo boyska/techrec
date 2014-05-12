@@ -75,8 +75,8 @@ def mp3_join(named_intervals):
         assert '|' not in filename
         files.append(filename)
 
-    cmdline = [ffmpeg, '-i', 'concat:%s' % '|'.join(files), '-acodec',
-               'copy']
+    cmdline = [ffmpeg, '-i', 'concat:%s' % '|'.join(files)]
+    cmdline += get_config()['FFMPEG_OUT_CODEC']
     if startskip is not None:
         cmdline += ['-ss', str(startskip)]
     else:
