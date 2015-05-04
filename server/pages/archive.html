@@ -53,10 +53,11 @@ $(function() {
 						parseInt(rec.starttime, 10)).toLocaleString()
 					);
 				var duration = $('<td/>').text(delta(rec.endtime, rec.starttime));
+				var dl_text = $('<span/>').text(" Scarica").addClass('pure-hidden-phone');
 				var fn = $("<td/>").append($("<a/>").prop("href", "/output/" +
 						rec.filename).addClass("pure-button pure-button-small")
 					.html( $("<i/>").addClass("fa fa-download").css("color", "green"))
-					.append(" Scarica") );
+					.append(dl_text));
 				var row = $('<tr/>').append(name).append(start).append(duration).append(fn);
 				$('#ongoing-recs-table tbody').append(row);
 			}

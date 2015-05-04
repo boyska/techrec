@@ -23,7 +23,7 @@ var form = {
 			errs.unshift({ msg: msg, el: element});
 		}
 		var v = form.get_values();
-		if(v.val === '') {
+		if(v.name === '') {
 			err("Nome mancante", $('#name'));
 		}
 		if(v.start === null) {
