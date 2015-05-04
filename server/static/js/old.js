@@ -106,6 +106,7 @@ $(function() {
 			var check = form.check();
 			if(check.length > 0) {
 				console.log("Errors in form", check);
+				error_dialog(check.map(function(err) { return err.msg; }).join('\n'));
 				return;
 			}
 			click($('#download'));
