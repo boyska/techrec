@@ -161,7 +161,10 @@ class RecAPI(Bottle):
                             (rec.endtime - rec.starttime).total_seconds()
                             }
         rec.filename = get_config()['AUDIO_OUTPUT_FORMAT'] % {
-            'time': rec.starttime.strftime('%y%m%d_%H%M'),
+            'time': rec.starttime.strftime('%y%m%d_%H%M'),  # kept for retrocompatibility, should be dropped
+            'startdt': rec.starttime.strftime('%y%m%d_%H%M'),
+            'enddt': rec.endtime.strftime('%y%m%d_%H%M'),
+            'endtime': rec.endtime.strftime('%H%M'),
             'name': filter(lambda c: c.isalpha(), rec.name)
         }
         self.db.get_session(rec).commit()
