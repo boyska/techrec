@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="techrec",
-    version="1.1.1",
+    version="1.1.2",
     description="A Python2 web application "
     "that assist radio speakers in recording their shows",
     long_description=open("README.md").read(),
