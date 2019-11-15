@@ -283,19 +283,20 @@ class RecServer:
                         static_file(filepath,
                                     root=get_config()['AUDIO_OUTPUT'],
                                     download=True))
+
         self._app.route('/static/<filepath:path>',
                         callback=lambda filepath: static_file(filepath,
-                                                              root='static/'))
+                                                              root=get_config()['STATIC_FILES']))
         self._app.route('/', callback=lambda: redirect('/new.html'))
         self._app.route('/new.html',
                         callback=partial(static_file, 'new.html',
-                                         root='pages/'))
+                                         root=get_config()['STATIC_PAGES']))
         self._app.route('/old.html',
                         callback=partial(static_file, 'old.html',
-                                         root='pages/'))
+                                         root=get_config()['STATIC_PAGES']))
         self._app.route('/archive.html',
                         callback=partial(static_file, 'archive.html',
-                                         root='pages/'))
+                                         root=get_config()['STATIC_PAGES']))
 
 
 class DebugAPI(Bottle):

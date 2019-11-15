@@ -2,14 +2,9 @@
 
 from setuptools import setup
 
-requires = [
-    line.strip()
-    for line in open("server/requirements.txt").read().split("\n")
-    if line.strip()
-]
 setup(
     name="techrec",
-    version="1.1",
+    version="1.1.1",
     description="A Python2 web application "
     "that assist radio speakers in recording their shows",
     long_description=open("README.md").read(),
@@ -18,10 +13,15 @@ setup(
     author_email="piuttosto@logorroici.org",
     packages=["techrec"],
     package_dir={"techrec": "server"},
-    install_requires=requires,
-    entry_points={
-        "console_scripts": [
-            "techrec = techrec.cli:main",
-        ]
-    },
+    install_requires=[
+        "Paste==1.7.5.1",
+        "SQLAlchemy==0.8.3",
+        "bottle==0.11.6",
+        "wsgiref==0.1.2",
+    ],
+    classifiers=["Programming Language :: Python :: 2.7"],
+    entry_points={"console_scripts": ["techrec = techrec.cli:main"]},
+    zip_safe=False,
+    install_package_data=True,
+    package_data={"techrec": ["static/**/*", "pages/*.html"]},
 )
