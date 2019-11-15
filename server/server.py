@@ -2,12 +2,13 @@ import os
 import sys
 from datetime import datetime
 import logging
-logger = logging.getLogger('server')
 from functools import partial
+import unicodedata
 
 from bottle import Bottle, request, static_file, redirect, abort, response
 import bottle
 
+logger = logging.getLogger('server')
 botlog = logging.getLogger('bottle')
 botlog.setLevel(logging.INFO)
 botlog.addHandler(logging.StreamHandler(sys.stdout))
@@ -130,7 +131,7 @@ class RecAPI(Bottle):
         else:
             newrec['endtime'] = date_read(req['endtime'])
         if 'name' in req:
-            newrec["name"] = req["name"]
+            newrec["name"] = req['name'].decode('utf8')
 
         try:
             logger.info("prima di update")
@@ -162,7 +163,8 @@ class RecAPI(Bottle):
                             }
         rec.filename = get_config()['AUDIO_OUTPUT_FORMAT'] % {
             'time': rec.starttime.strftime('%y%m%d_%H%M'),
-            'name': filter(lambda c: c.isalpha(), rec.name)
+            'name': filter(lambda c: c.isalpha(),
+                           unicodedata.normalize('NFKD', rec.name).encode('ascii', 'ignore'))
         }
         self.db.get_session(rec).commit()
         job_id = self._app.pq.submit(
