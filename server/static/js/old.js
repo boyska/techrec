@@ -23,7 +23,7 @@ var form = {
 			errs.unshift({ msg: msg, el: element});
 		}
 		var v = form.get_values();
-		if(v.val === '') {
+		if(v.name === '') {
 			err("Nome mancante", $('#name'));
 		}
 		if(v.start === null) {
@@ -106,6 +106,7 @@ $(function() {
 			var check = form.check();
 			if(check.length > 0) {
 				console.log("Errors in form", check);
+				error_dialog(check.map(function(err) { return err.msg; }).join('\n'));
 				return;
 			}
 			click($('#download'));
