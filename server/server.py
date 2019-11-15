@@ -95,7 +95,7 @@ class RecAPI(Bottle):
 
         now = datetime.now()
         start = date_read(req['starttime']) if 'starttime' in req else now
-        name = req['name'] if 'name' in req else ""
+        name = req['name'].decode('utf8') if 'name' in req else u""
         end = date_read(req['endtime']) if 'endtime' in req else now
 
         rec = Rec(name=name,
