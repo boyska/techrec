@@ -81,7 +81,7 @@ def common_pre():
         for warn in check():
             logger.warn(warn)
 
-if __name__ == "__main__":
+def main():
     parser = ArgumentParser(description='creates mp3 from live recordings')
     parser.add_argument('--verbose', '-v', action='count',
                         help='Increase verbosity; can be used multiple times')
@@ -122,3 +122,5 @@ if __name__ == "__main__":
             logging.info("giving verbose flag >2 times is useless")
     common_pre()
     options.func(options)
+if __name__ == "__main__":
+    main()
