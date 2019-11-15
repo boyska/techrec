@@ -14,7 +14,7 @@ botlog.setLevel(logging.INFO)
 botlog.addHandler(logging.StreamHandler(sys.stdout))
 bottle._stderr = lambda x: botlog.info(x.strip())
 
-from .techrec import Rec, RecDB
+from .db import Rec, RecDB
 from .processqueue import get_process_queue
 from .forge import create_mp3
 from .config_manager import get_config

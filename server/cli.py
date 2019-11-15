@@ -9,10 +9,10 @@ logger = logging.getLogger('cli')
 
 CWD = os.getcwd()
 
-from techrec import forge
-from techrec import maint
+from . import forge
+from . import maint
 from .config_manager import get_config
-from techrec import server
+from . import server
 
 
 def pre_check_permissions():

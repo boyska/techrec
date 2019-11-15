@@ -5,7 +5,7 @@ import logging
 from sqlalchemy import inspect
 
 from .config_manager import get_config
-from .techrec import RecDB
+from .db import RecDB
 
 def cleanold_cmd(options):
     log = logging.getLogger('cleanold')
