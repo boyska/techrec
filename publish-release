@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+set -u
+
+ver=$(git describe --exact-match | tr -d v)
+
+python setup.py sdist bdist_egg bdist_wheel
+twine upload -s dist/techrec-${ver}*.whl
+twine upload -s dist/techrec-${ver}*.egg
+twine upload -s dist/techrec-${ver}*.tar.gz
