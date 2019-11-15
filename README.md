@@ -47,3 +47,8 @@ The encoding part is delegated to `ffmpeg`, but the code is really modular so
 changing this is a breeze. To be quicker and avoid the quality issues related
 to reencoding, the codec "copy" is used: this means that input and output must
 have the same format.
+
+testing
+-----------
+
+unit tests can be run with `python setup.py test`
