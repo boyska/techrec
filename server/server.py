@@ -89,13 +89,13 @@ class RecAPI(Bottle):
         self.get('/jobs/<job_id:int>', callback=self.check_job)
 
     def create(self):
-        req = dict(request.POST.allitems())
+        req = dict(request.POST.decode().allitems())
         ret = {}
         logger.debug("Create request %s " % req)
 
         now = datetime.now()
         start = date_read(req['starttime']) if 'starttime' in req else now
-        name = req['name'].decode('utf8') if 'name' in req else u""
+        name = req['name'] if 'name' in req else u""
         end = date_read(req['endtime']) if 'endtime' in req else now
 
         rec = Rec(name=name,
@@ -107,7 +107,7 @@ class RecAPI(Bottle):
                             rec=rec_sanitize(rec))
 
     def delete(self):
-        req = dict(request.POST.allitems())
+        req = dict(request.POST.decode().allitems())
         logging.info("Server: request delete %s " % (req))
         if 'id' not in req:
             return self.rec_err("No valid ID")
@@ -118,7 +118,7 @@ class RecAPI(Bottle):
             return self.rec_err("DELETE error: %s" % (self.db.get_err()))
 
     def update(self, recid):
-        req = dict(request.POST.allitems())
+        req = dict(request.POST.decode().allitems())
 
         newrec = {}
         now = datetime.now()
@@ -131,7 +131,7 @@ class RecAPI(Bottle):
         else:
             newrec['endtime'] = date_read(req['endtime'])
         if 'name' in req:
-            newrec["name"] = req['name'].decode('utf8')
+            newrec["name"] = req['name']
 
         try:
             logger.info("prima di update")
@@ -144,7 +144,7 @@ class RecAPI(Bottle):
 
     def generate(self):
         # prendiamo la rec in causa
-        recid = dict(request.POST.allitems())['id']
+        recid = dict(request.POST.decode().allitems())['id']
         rec = self.db._search(_id=recid)[0]
         if rec.filename is not None and os.path.exists(rec.filename):
             return {'status': 'ready',
@@ -166,8 +166,8 @@ class RecAPI(Bottle):
             'endtime': rec.endtime.strftime('%H%M'),
             'startdt': rec.starttime.strftime('%y%m%d_%H%M'),
             'enddt': rec.endtime.strftime('%y%m%d_%H%M'),
-            'name': filter(lambda c: c.isalpha(),
-                           unicodedata.normalize('NFKD', rec.name).encode('ascii', 'ignore')),
+            'name': ''.join(filter(lambda c: c.isalpha(),
+                           unicodedata.normalize('NFKD', rec.name).encode('ascii', 'ignore').decode('ascii'))),
         }
         self.db.get_session(rec).commit()
         job_id = self._app.pq.submit(
