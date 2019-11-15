@@ -14,10 +14,9 @@ setup(
     packages=["techrec"],
     package_dir={"techrec": "server"},
     install_requires=[
-        "Paste==1.7.5.1",
+        "Paste~=3.2",
         "SQLAlchemy==0.8.3",
-        "bottle==0.11.6",
-        "wsgiref==0.1.2",
+        "bottle~=0.12",
     ],
     classifiers=["Programming Language :: Python :: 2.7"],
     entry_points={"console_scripts": ["techrec = techrec.cli:main"]},

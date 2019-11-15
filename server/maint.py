@@ -1,10 +1,11 @@
+from __future__ import print_function
 import sys
 import logging
 
 from sqlalchemy import inspect
 
-from config_manager import get_config
-from techrec import RecDB
+from .config_manager import get_config
+from .techrec import RecDB
 
 def cleanold_cmd(options):
     log = logging.getLogger('cleanold')
@@ -14,7 +15,7 @@ def cleanold_cmd(options):
     count = len(res)
     if options.pretend:
         for rec in res:
-            print rec
+            print(rec)
     else:
         for rec in res:
             logging.info("Deleting " + str(rec))

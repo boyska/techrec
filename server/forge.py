@@ -4,7 +4,7 @@ import os
 from subprocess import Popen
 import logging
 
-from config_manager import get_config
+from .config_manager import get_config
 
 
 def get_timefile_exact(time):

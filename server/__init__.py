@@ -1,2 +1,2 @@
-import server
-import cli
+from . import server
+from . import cli

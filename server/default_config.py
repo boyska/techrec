@@ -33,7 +33,5 @@ try:
     if resource_isdir('techrec', 'pages'):
         STATIC_PAGES = resource_filename('techrec', 'pages')
         STATIC_FILES = resource_filename('techrec', 'static')
-    else:
-        print "invece dice", resource_filename('techrec', 'static')
 except ImportError:
     logging.exception("Error loading resources from installed part")

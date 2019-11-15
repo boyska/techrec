@@ -1,6 +1,7 @@
 '''
 This module contains DB logic
 '''
+from __future__ import print_function
 import logging
 from datetime import datetime, timedelta
 
@@ -11,7 +12,7 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime, inspect
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-from config_manager import get_config
+from .config_manager import get_config
 
 PAGESIZE = 10
 
@@ -218,7 +219,7 @@ class RecDB:
         return ret
 
     def get_err(self):
-        print "DB error: %s" % (self.err)
+        print("DB error: %s" % (self.err))
         t = self.err
         self.err = ""
         return t
@@ -227,25 +228,25 @@ class RecDB:
 if __name__ == "__main__":
     def printall(queryres):
         for record in queryres:
-            print "Record: %s" % record
+            print("Record: %s" % record)
 
     db = RecDB()
-    _mytime = datetime(2014, 05, 23, 15, 12, 17)
-    _endtime = datetime(2014, 05, 24, 17, 45, 17)
+    _mytime = datetime(2014, 5, 23, 15, 12, 17)
+    _endtime = datetime(2014, 5, 24, 17, 45, 17)
 
     a = Rec(name="Mimmo1", starttime=_mytime, endtime=_endtime)
     printall(db._search())
     sys.exit("End test job")
 
     # a = Rec(name="Mimmo1", starttime=_mytime, endtime=None)
-    print "Aggiunto", db.add(a)
+    print("Aggiunto", db.add(a))
     printall(db.get_all(page_size=5, page=0))
 
-    print "Mimmo "
+    print("Mimmo ")
     printall(db._search(name="Mimmo1"))
-    print "Search"
+    print("Search")
     printall(db._search(name="Mimmo1",
-                        starttime=datetime(2014, 05, 24, 15, 16, 1) ))
+                        starttime=datetime(2014, 5, 24, 15, 16, 1) ))
     a = db.get_by_id(5)
     a.start()
     db.delete(1)

@@ -4,7 +4,7 @@ from nose.tools import raises, eq_
 
 from forge import get_files_and_intervals, get_timefile_exact, round_timefile,\
     get_timefile, mp3_join
-from config_manager import get_config
+from .config_manager import get_config
 
 eight = datetime(2014, 5, 30, 20)
 nine = datetime(2014, 5, 30, 21)
