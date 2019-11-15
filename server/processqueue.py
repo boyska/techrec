@@ -12,18 +12,18 @@ class JobQueue(object):
         job_id = self.last_job_id
 
         def clean_jobs(res):
-            '''this callback will remove the job from the queue'''
+            """this callback will remove the job from the queue"""
             del self.jobs[job_id]
-        self.jobs[job_id] = self.pool.apply_async(function, args, kwargs,
-                                                  clean_jobs)
+
+        self.jobs[job_id] = self.pool.apply_async(function, args, kwargs, clean_jobs)
         return job_id
 
     def check_job(self, job_id):
-        '''
+        """
         If the job is running, return the asyncResult.
         If it has already completed, returns True.
         If no such job_id exists at all, returns False
-        '''
+        """
         if job_id <= 0:
             raise ValueError("non-valid job_id")
         if self.last_job_id < job_id:
@@ -38,13 +38,16 @@ class JobQueue(object):
         self.pool = None
 
 
-def simulate_long_job(recid=None, starttime=None, endtime=None, name='', filename=None):
+def simulate_long_job(recid=None, starttime=None, endtime=None, name="", filename=None):
     from time import sleep
+
     print("evviva " + name)
     sleep(2)
     print("lavoro su " + name)
     sleep(2)
     print("done su " + name)
+
+
 _queue = None
 
 
@@ -54,12 +57,15 @@ def get_process_queue():
         _queue = JobQueue()
     return _queue
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     from datetime import datetime
+
     n = datetime.now()
 
     def sleep(n):
         import time
+
         print("Inizio %d" % n)
         time.sleep(n)
         print("Finisco %d" % n)

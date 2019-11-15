@@ -8,8 +8,8 @@ import unicodedata
 from bottle import Bottle, request, static_file, redirect, abort, response
 import bottle
 
-logger = logging.getLogger('server')
-botlog = logging.getLogger('bottle')
+logger = logging.getLogger("server")
+botlog = logging.getLogger("bottle")
 botlog.setLevel(logging.INFO)
 botlog.addHandler(logging.StreamHandler(sys.stdout))
 bottle._stderr = lambda x: botlog.info(x.strip())
@@ -25,47 +25,49 @@ def date_read(s):
 
 
 def date_write(dt):
-    return dt.strftime('%s')
+    return dt.strftime("%s")
 
 
 def rec_sanitize(rec):
     d = rec.serialize()
-    d['starttime'] = date_write(d['starttime'])
-    d['endtime'] = date_write(d['endtime'])
+    d["starttime"] = date_write(d["starttime"])
+    d["endtime"] = date_write(d["endtime"])
     return d
 
 
 class DateApp(Bottle):
-    '''
+    """
     This application will expose some date-related functions; it is intended to
     be used when you need to know the server's time on the browser
-    '''
+    """
+
     def __init__(self):
         Bottle.__init__(self)
-        self.route('/help', callback=self.help)
-        self.route('/date', callback=self.date)
-        self.route('/custom', callback=self.custom)
+        self.route("/help", callback=self.help)
+        self.route("/date", callback=self.date)
+        self.route("/custom", callback=self.custom)
 
     def date(self):
         n = datetime.now()
         return {
-            'unix': n.strftime('%s'),
-            'isoformat': n.isoformat(),
-            'ctime': n.ctime()
+            "unix": n.strftime("%s"),
+            "isoformat": n.isoformat(),
+            "ctime": n.ctime(),
         }
 
     def custom(self):
         n = datetime.now()
-        if 'strftime' not in request.query:
+        if "strftime" not in request.query:
             abort(400, 'Need argument "strftime"')
-        response.content_type = 'text/plain'
-        return n.strftime(request.query['strftime'])
+        response.content_type = "text/plain"
+        return n.strftime(request.query["strftime"])
 
     def help(self):
-        response.content_type = 'text/plain'
-        return \
-            '/date : get JSON dict containing multiple formats of now()\n' + \
-            '/custom?strftime=FORMAT : get now().strftime(FORMAT)'
+        response.content_type = "text/plain"
+        return (
+            "/date : get JSON dict containing multiple formats of now()\n"
+            + "/custom?strftime=FORMAT : get now().strftime(FORMAT)"
+        )
 
 
 class RecAPI(Bottle):
@@ -73,20 +75,20 @@ class RecAPI(Bottle):
         Bottle.__init__(self)
         self._route()
         self._app = app
-        self.db = RecDB(get_config()['DB_URI'])
+        self.db = RecDB(get_config()["DB_URI"])
 
     def _route(self):
-        self.post('/create', callback=self.create)
-        self.post('/delete', callback=self.delete)
-        self.post('/update/<recid:int>', callback=self.update)
-        self.post('/generate', callback=self.generate)
-        self.get('/help', callback=self.help)
-        self.get('/', callback=self.help)
-        self.get('/get/search', callback=self.search)
-        self.get('/get/ongoing', callback=self.get_ongoing)
-        self.get('/get/archive', callback=self.get_archive)
-        self.get('/jobs', callback=self.running_jobs)
-        self.get('/jobs/<job_id:int>', callback=self.check_job)
+        self.post("/create", callback=self.create)
+        self.post("/delete", callback=self.delete)
+        self.post("/update/<recid:int>", callback=self.update)
+        self.post("/generate", callback=self.generate)
+        self.get("/help", callback=self.help)
+        self.get("/", callback=self.help)
+        self.get("/get/search", callback=self.search)
+        self.get("/get/ongoing", callback=self.get_ongoing)
+        self.get("/get/archive", callback=self.get_archive)
+        self.get("/jobs", callback=self.running_jobs)
+        self.get("/jobs/<job_id:int>", callback=self.check_job)
 
     def create(self):
         req = dict(request.POST.decode().allitems())
@@ -94,22 +96,21 @@ class RecAPI(Bottle):
         logger.debug("Create request %s " % req)
 
         now = datetime.now()
-        start = date_read(req['starttime']) if 'starttime' in req else now
-        name = req['name'] if 'name' in req else u""
-        end = date_read(req['endtime']) if 'endtime' in req else now
+        start = date_read(req["starttime"]) if "starttime" in req else now
+        name = req["name"] if "name" in req else u""
+        end = date_read(req["endtime"]) if "endtime" in req else now
 
-        rec = Rec(name=name,
-                  starttime=start,
-                  endtime=end)
+        rec = Rec(name=name, starttime=start, endtime=end)
         ret = self.db.add(rec)
 
-        return self.rec_msg("Nuova registrazione creata! (id:%d)" % ret.id,
-                            rec=rec_sanitize(rec))
+        return self.rec_msg(
+            "Nuova registrazione creata! (id:%d)" % ret.id, rec=rec_sanitize(rec)
+        )
 
     def delete(self):
         req = dict(request.POST.decode().allitems())
         logging.info("Server: request delete %s " % (req))
-        if 'id' not in req:
+        if "id" not in req:
             return self.rec_err("No valid ID")
 
         if self.db.delete(req["id"]):
@@ -122,16 +123,16 @@ class RecAPI(Bottle):
 
         newrec = {}
         now = datetime.now()
-        if 'starttime' not in req:
-            newrec['starttime'] = now
+        if "starttime" not in req:
+            newrec["starttime"] = now
         else:
-            newrec['starttime'] = date_read(req['starttime'])
+            newrec["starttime"] = date_read(req["starttime"])
         if "endtime" not in req:
-            newrec['endtime'] = now
+            newrec["endtime"] = now
         else:
-            newrec['endtime'] = date_read(req['endtime'])
-        if 'name' in req:
-            newrec["name"] = req['name']
+            newrec["endtime"] = date_read(req["endtime"])
+        if "name" in req:
+            newrec["name"] = req["name"]
 
         try:
             logger.info("prima di update")
@@ -139,88 +140,101 @@ class RecAPI(Bottle):
             logger.info("dopo update")
         except Exception as exc:
             return self.rec_err("Errore Aggiornamento", exception=exc)
-        return self.rec_msg("Aggiornamento completato!",
-                            rec=rec_sanitize(result_rec))
+        return self.rec_msg("Aggiornamento completato!", rec=rec_sanitize(result_rec))
 
     def generate(self):
         # prendiamo la rec in causa
-        recid = dict(request.POST.decode().allitems())['id']
+        recid = dict(request.POST.decode().allitems())["id"]
         rec = self.db._search(_id=recid)[0]
         if rec.filename is not None and os.path.exists(rec.filename):
-            return {'status': 'ready',
-                    'message': 'The file has already been generated at %s' %
-                    rec.filename,
-                    'rec': rec
-                    }
-        if get_config()['FORGE_MAX_DURATION'] > 0 and \
-                (rec.endtime - rec.starttime).total_seconds() > \
-                get_config()['FORGE_MAX_DURATION']:
-                    response.status = 400
-                    return {'status': 'error',
-                            'message': 'The requested recording is too long' +
-                            ' (%d seconds)' %
-                            (rec.endtime - rec.starttime).total_seconds()
-                            }
-        rec.filename = get_config()['AUDIO_OUTPUT_FORMAT'] % {
-            'time': rec.starttime.strftime('%y%m%d_%H%M'),  # kept for retrocompatibility, should be dropped
-            'endtime': rec.endtime.strftime('%H%M'),
-            'startdt': rec.starttime.strftime('%y%m%d_%H%M'),
-            'enddt': rec.endtime.strftime('%y%m%d_%H%M'),
-            'name': ''.join(filter(lambda c: c.isalpha(),
-                           unicodedata.normalize('NFKD', rec.name).encode('ascii', 'ignore').decode('ascii'))),
+            return {
+                "status": "ready",
+                "message": "The file has already been generated at %s" % rec.filename,
+                "rec": rec,
+            }
+        if (
+            get_config()["FORGE_MAX_DURATION"] > 0
+            and (rec.endtime - rec.starttime).total_seconds()
+            > get_config()["FORGE_MAX_DURATION"]
+        ):
+            response.status = 400
+            return {
+                "status": "error",
+                "message": "The requested recording is too long"
+                + " (%d seconds)" % (rec.endtime - rec.starttime).total_seconds(),
+            }
+        rec.filename = get_config()["AUDIO_OUTPUT_FORMAT"] % {
+            "time": rec.starttime.strftime(
+                "%y%m%d_%H%M"
+            ),  # kept for retrocompatibility, should be dropped
+            "endtime": rec.endtime.strftime("%H%M"),
+            "startdt": rec.starttime.strftime("%y%m%d_%H%M"),
+            "enddt": rec.endtime.strftime("%y%m%d_%H%M"),
+            "name": "".join(
+                filter(
+                    lambda c: c.isalpha(),
+                    unicodedata.normalize("NFKD", rec.name)
+                    .encode("ascii", "ignore")
+                    .decode("ascii"),
+                )
+            ),
         }
         self.db.get_session(rec).commit()
         job_id = self._app.pq.submit(
             create_mp3,
             start=rec.starttime,
             end=rec.endtime,
-            outfile=os.path.join(get_config()['AUDIO_OUTPUT'], rec.filename),
+            outfile=os.path.join(get_config()["AUDIO_OUTPUT"], rec.filename),
             options={
-                'title': rec.name,
-                'license_uri': get_config()['TAG_LICENSE_URI'],
-                'extra_tags': get_config()['TAG_EXTRA']
-            }
+                "title": rec.name,
+                "license_uri": get_config()["TAG_LICENSE_URI"],
+                "extra_tags": get_config()["TAG_EXTRA"],
+            },
         )
         logger.debug("SUBMITTED: %d" % job_id)
-        return self.rec_msg("Aggiornamento completato!",
-                            job_id=job_id,
-                            result='/output/' + rec.filename,
-                            rec=rec_sanitize(rec))
+        return self.rec_msg(
+            "Aggiornamento completato!",
+            job_id=job_id,
+            result="/output/" + rec.filename,
+            rec=rec_sanitize(rec),
+        )
 
     def check_job(self, job_id):
         try:
             job = self._app.pq.check_job(job_id)
         except ValueError:
-            abort(400, 'job_id not valid')
+            abort(400, "job_id not valid")
 
         def ret(status):
-            return {'job_status': status, 'job_id': job_id}
+            return {"job_status": status, "job_id": job_id}
+
         if job is True:
-            return ret('DONE')
+            return ret("DONE")
         if job is False:
-            abort(404, 'No such job has ever been spawned')
+            abort(404, "No such job has ever been spawned")
         else:
             if job.ready():
                 try:
                     res = job.get()
                     return res
                 except Exception as exc:
-                    r = ret('FAILED')
-                    r['exception'] = str(exc)
+                    r = ret("FAILED")
+                    r["exception"] = str(exc)
                     import traceback
+
                     tb = traceback.format_exc()
                     logger.warning(tb)
-                    if get_config()['DEBUG']:
-                        r['exception'] = "%s: %s" % (str(exc), tb)
-                        r['traceback'] = tb
+                    if get_config()["DEBUG"]:
+                        r["exception"] = "%s: %s" % (str(exc), tb)
+                        r["traceback"] = tb
 
                     return r
-            return ret('WIP')
+            return ret("WIP")
 
     def running_jobs(self):
         res = {}
-        res['last_job_id'] = self._app.pq.last_job_id
-        res['running'] = self._app.pq.jobs.keys()
+        res["last_job_id"] = self._app.pq.last_job_id
+        res["running"] = self._app.pq.jobs.keys()
         return res
 
     def search(self, args=None):
@@ -230,8 +244,8 @@ class RecAPI(Bottle):
 
         values = self.db._search(**req)
         from pprint import pprint
-        logger.debug("Returned Values %s" %
-                     pprint([r.serialize() for r in values]))
+
+        logger.debug("Returned Values %s" % pprint([r.serialize() for r in values]))
 
         ret = {}
         for rec in values:
@@ -241,12 +255,10 @@ class RecAPI(Bottle):
         return ret
 
     def get_ongoing(self):
-        return {rec.id: rec_sanitize(rec)
-                for rec in self.db.get_ongoing()}
+        return {rec.id: rec_sanitize(rec) for rec in self.db.get_ongoing()}
 
     def get_archive(self):
-        return {rec.id: rec_sanitize(rec)
-                for rec in self.db.get_archive_recent()}
+        return {rec.id: rec_sanitize(rec) for rec in self.db.get_archive_recent()}
 
     # @route('/help')
     def help(self):
@@ -279,104 +291,126 @@ class RecServer:
         self._app.pq = get_process_queue()
         self._route()
 
-        self.db = RecDB(get_config()['DB_URI'])
+        self.db = RecDB(get_config()["DB_URI"])
 
     def _route(self):
         # Static part of the site
-        self._app.route('/output/<filepath:path>',
-                        callback=lambda filepath:
-                        static_file(filepath,
-                                    root=get_config()['AUDIO_OUTPUT'],
-                                    download=True))
+        self._app.route(
+            "/output/<filepath:path>",
+            callback=lambda filepath: static_file(
+                filepath, root=get_config()["AUDIO_OUTPUT"], download=True
+            ),
+        )
 
-        self._app.route('/static/<filepath:path>',
-                        callback=lambda filepath: static_file(filepath,
-                                                              root=get_config()['STATIC_FILES']))
-        self._app.route('/', callback=lambda: redirect('/new.html'))
-        self._app.route('/new.html',
-                        callback=partial(static_file, 'new.html',
-                                         root=get_config()['STATIC_PAGES']))
-        self._app.route('/old.html',
-                        callback=partial(static_file, 'old.html',
-                                         root=get_config()['STATIC_PAGES']))
-        self._app.route('/archive.html',
-                        callback=partial(static_file, 'archive.html',
-                                         root=get_config()['STATIC_PAGES']))
+        self._app.route(
+            "/static/<filepath:path>",
+            callback=lambda filepath: static_file(
+                filepath, root=get_config()["STATIC_FILES"]
+            ),
+        )
+        self._app.route("/", callback=lambda: redirect("/new.html"))
+        self._app.route(
+            "/new.html",
+            callback=partial(
+                static_file, "new.html", root=get_config()["STATIC_PAGES"]
+            ),
+        )
+        self._app.route(
+            "/old.html",
+            callback=partial(
+                static_file, "old.html", root=get_config()["STATIC_PAGES"]
+            ),
+        )
+        self._app.route(
+            "/archive.html",
+            callback=partial(
+                static_file, "archive.html", root=get_config()["STATIC_PAGES"]
+            ),
+        )
 
 
 class DebugAPI(Bottle):
-    '''
+    """
     This application is useful for testing the webserver itself
-    '''
+    """
+
     def __init__(self):
         Bottle.__init__(self)
-        self.route('/sleep/:milliseconds', callback=self.sleep)
-        self.route('/cpusleep/:howmuch', callback=self.cpusleep)
-        self.route('/big/:exponent', callback=self.big)
+        self.route("/sleep/:milliseconds", callback=self.sleep)
+        self.route("/cpusleep/:howmuch", callback=self.cpusleep)
+        self.route("/big/:exponent", callback=self.big)
 
     def sleep(self, milliseconds):
         import time
-        time.sleep(int(milliseconds)/1000.0)
-        return 'ok'
+
+        time.sleep(int(milliseconds) / 1000.0)
+        return "ok"
 
     def cpusleep(self, howmuch):
-        out = ''
-        for i in xrange(int(howmuch) * (10**3)):
+        out = ""
+        for i in xrange(int(howmuch) * (10 ** 3)):
             if i % 11234 == 0:
-                out += 'a'
+                out += "a"
         return out
 
     def big(self, exponent):
-        '''
+        """
         returns a 2**n -1 string
-        '''
+        """
         for i in xrange(int(exponent)):
             yield str(i) * (2 ** i)
 
     def help(self):
-        response.content_type = 'text/plain'
-        return '''
+        response.content_type = "text/plain"
+        return """
     /sleep/<int:milliseconds> : sleep, than say "ok"
     /cpusleep/<int:howmuch> : busysleep, than say "ok"
     /big/<int:exponent> : returns a 2**n -1 byte content
-    '''
+    """
 
 
 class PasteLoggingServer(bottle.PasteServer):
     def run(self, handler):  # pragma: no cover
         from paste import httpserver
         from paste.translogger import TransLogger
-        handler = TransLogger(handler, **self.options['translogger_opts'])
-        del self.options['translogger_opts']
-        httpserver.serve(handler, host=self.host, port=str(self.port),
-                         **self.options)
-bottle.server_names['pastelog'] = PasteLoggingServer
+
+        handler = TransLogger(handler, **self.options["translogger_opts"])
+        del self.options["translogger_opts"]
+        httpserver.serve(handler, host=self.host, port=str(self.port), **self.options)
+
+
+bottle.server_names["pastelog"] = PasteLoggingServer
 
 
 def main_cmd(*args):
     """meant to be called from argparse"""
     c = RecServer()
-    c._app.mount('/date', DateApp())
-    c._app.mount('/api', RecAPI(c._app))
-    if get_config()['DEBUG']:
-        c._app.mount('/debug', DebugAPI())
+    c._app.mount("/date", DateApp())
+    c._app.mount("/api", RecAPI(c._app))
+    if get_config()["DEBUG"]:
+        c._app.mount("/debug", DebugAPI())
 
-    server = get_config()['WSGI_SERVER']
-    if server == 'pastelog':
+    server = get_config()["WSGI_SERVER"]
+    if server == "pastelog":
         from paste.translogger import TransLogger
-        get_config()['WSGI_SERVER_OPTIONS']['translogger_opts'] = \
-            get_config()['TRANSLOGGER_OPTS']
 
-    c._app.run(server=server,
-               host=get_config()['HOST'],
-               port=get_config()['PORT'],
-               debug=get_config()['DEBUG'],
-               quiet=True,  # this is to hide access.log style messages
-               **get_config()['WSGI_SERVER_OPTIONS']
-               )
+        get_config()["WSGI_SERVER_OPTIONS"]["translogger_opts"] = get_config()[
+            "TRANSLOGGER_OPTS"
+        ]
 
-if __name__ == '__main__':
+    c._app.run(
+        server=server,
+        host=get_config()["HOST"],
+        port=get_config()["PORT"],
+        debug=get_config()["DEBUG"],
+        quiet=True,  # this is to hide access.log style messages
+        **get_config()["WSGI_SERVER_OPTIONS"]
+    )
+
+
+if __name__ == "__main__":
     from cli import common_pre
+
     common_pre()
     logger.warn("Usage of server.py is deprecated; use cli.py")
     main_cmd()

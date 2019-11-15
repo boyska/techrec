@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="techrec",
-    version="1.1.3",
+    version="1.2.0",
     description="A Python2 web application "
     "that assist radio speakers in recording their shows",
     long_description=open("README.md").read(),
@@ -14,7 +14,10 @@ setup(
     packages=["techrec"],
     package_dir={"techrec": "server"},
     install_requires=["Paste~=3.2", "SQLAlchemy==0.8.3", "bottle~=0.12"],
-    classifiers=["Programming Language :: Python :: 2.7"],
+    classifiers=[
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.7",
+    ],
     entry_points={"console_scripts": ["techrec = techrec.cli:main"]},
     zip_safe=False,
     install_package_data=True,

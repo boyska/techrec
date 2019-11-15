@@ -10,6 +10,8 @@ def get_config():
     if get_config.instance is None:
         get_config.instance = Config(os.getcwd())
     return get_config.instance
+
+
 get_config.instance = None
 
 
@@ -78,11 +80,12 @@ class Config(dict):
         if not rv:
             if silent:
                 return False
-            raise RuntimeError('The environment variable %r is not set '
-                               'and as such configuration could not be '
-                               'loaded.  Set this variable and make it '
-                               'point to a configuration file' %
-                               variable_name)
+            raise RuntimeError(
+                "The environment variable %r is not set "
+                "and as such configuration could not be "
+                "loaded.  Set this variable and make it "
+                "point to a configuration file" % variable_name
+            )
         return self.from_pyfile(rv, silent=silent)
 
     def from_pyfile(self, filename, silent=False):
@@ -100,15 +103,15 @@ class Config(dict):
            `silent` parameter.
         """
         filename = os.path.join(self.root_path, filename)
-        d = imp.new_module('config')
+        d = imp.new_module("config")
         d.__file__ = filename
         try:
             with open(filename) as config_file:
-                exec(compile(config_file.read(), filename, 'exec'), d.__dict__)
+                exec(compile(config_file.read(), filename, "exec"), d.__dict__)
         except IOError as e:
             if silent and e.errno in (errno.ENOENT, errno.EISDIR):
                 return False
-            e.strerror = 'Unable to load configuration file (%s)' % e.strerror
+            e.strerror = "Unable to load configuration file (%s)" % e.strerror
             raise
         self.from_object(d)
         return True
@@ -143,7 +146,7 @@ class Config(dict):
                 self[key] = getattr(obj, key)
 
     def __repr__(self):
-        return '<%s %s>' % (self.__class__.__name__, dict.__repr__(self))
+        return "<%s %s>" % (self.__class__.__name__, dict.__repr__(self))
 
 
 def import_string(import_name, silent=False):
@@ -159,27 +162,27 @@ def import_string(import_name, silent=False):
                    `None` is returned instead.
     :return: imported object
     """
-    #XXX: py3 review needed
+    # XXX: py3 review needed
     assert isinstance(import_name, string_types)
     # force the import name to automatically convert to strings
     import_name = str(import_name)
     try:
-        if ':' in import_name:
-            module, obj = import_name.split(':', 1)
-        elif '.' in import_name:
-            module, obj = import_name.rsplit('.', 1)
+        if ":" in import_name:
+            module, obj = import_name.split(":", 1)
+        elif "." in import_name:
+            module, obj = import_name.rsplit(".", 1)
         else:
             return __import__(import_name)
         # __import__ is not able to handle unicode strings in the fromlist
         # if the module is a package
         if sys.version_info[0] == 2 and isinstance(obj, unicode):
-            obj = obj.encode('utf-8')
+            obj = obj.encode("utf-8")
         try:
             return getattr(__import__(module, None, None, [obj]), obj)
         except (ImportError, AttributeError):
             # support importing modules not yet set up by the parent module
             # (or package for that matter)
-            modname = module + '.' + obj
+            modname = module + "." + obj
             __import__(modname)
             return sys.modules[modname]
     except ImportError as e:

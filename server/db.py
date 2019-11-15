@@ -1,6 +1,6 @@
-'''
+"""
 This module contains DB logic
-'''
+"""
 from __future__ import print_function
 import logging
 from datetime import datetime, timedelta
@@ -20,33 +20,38 @@ Base = declarative_base()
 
 
 class Rec(Base):
-    '''Entry on the DB'''
-    __tablename__ = 'rec'
+    """Entry on the DB"""
+
+    __tablename__ = "rec"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=True)
     starttime = Column(DateTime, nullable=True)
     endtime = Column(DateTime, nullable=True)
     filename = Column(String, nullable=True)
 
-    def __init__(self, name="", starttime=None, endtime=None,
-                 filename=None):
+    def __init__(self, name="", starttime=None, endtime=None, filename=None):
         self.name = name
         self.starttime = starttime
         self.endtime = endtime
         self.filename = filename
 
     def serialize(self):
-        '''json-friendly encoding'''
-        return {'id': self.id,
-                'name': self.name,
-                'starttime': self.starttime,
-                'endtime': self.endtime,
-                'filename': self.filename
-                }
+        """json-friendly encoding"""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "starttime": self.starttime,
+            "endtime": self.endtime,
+            "filename": self.filename,
+        }
 
     def __repr__(self):
-        contents = "id:'%s',name:'%s',Start: '%s',End: '%s'" % \
-            (self.id, self.name, self.starttime, self.endtime)
+        contents = "id:'%s',name:'%s',Start: '%s',End: '%s'" % (
+            self.id,
+            self.name,
+            self.starttime,
+            self.endtime,
+        )
         if self.filename is not None:
             contents += ",Filename: '%s'" % self.filename
         return "<Rec(%s)>" % contents
@@ -58,12 +63,11 @@ class RecDB:
         self.conn = self.engine.connect()
         self.log = logging.getLogger(name=self.__class__.__name__)
 
-        logging.getLogger('sqlalchemy.engine').setLevel(logging.FATAL)
-        logging.getLogger('sqlalchemy.engine.base.Engine')\
-            .setLevel(logging.FATAL)
-        logging.getLogger('sqlalchemy.dialects').setLevel(logging.FATAL)
-        logging.getLogger('sqlalchemy.pool').setLevel(logging.FATAL)
-        logging.getLogger('sqlalchemy.orm').setLevel(logging.FATAL)
+        logging.getLogger("sqlalchemy.engine").setLevel(logging.FATAL)
+        logging.getLogger("sqlalchemy.engine.base.Engine").setLevel(logging.FATAL)
+        logging.getLogger("sqlalchemy.dialects").setLevel(logging.FATAL)
+        logging.getLogger("sqlalchemy.pool").setLevel(logging.FATAL)
+        logging.getLogger("sqlalchemy.orm").setLevel(logging.FATAL)
 
         Base.metadata.create_all(self.engine)  # create Database
 
@@ -74,17 +78,17 @@ class RecDB:
 
     def add(self, simplerecord):
         s = self.get_session()
-        s.add( simplerecord )
+        s.add(simplerecord)
         s.commit()
         self.log.info("New Record: %s" % simplerecord)
-        return ( simplerecord )
+        return simplerecord
 
     def update(self, id, rec):
 
         # TODO: rlist = results list
         _rlist = self._search(_id=id)
         if not len(_rlist) == 1:
-            raise ValueError('Too many recs with id=%s' % id)
+            raise ValueError("Too many recs with id=%s" % id)
 
         self.log.debug("DB:: Update request %s:%s " % (id, rec))
         self.log.debug("DB:: Update: data before %s" % _rlist[0])
@@ -92,7 +96,7 @@ class RecDB:
         # 2013-11-24 22:22:42
         _rlist[0].starttime = rec["starttime"]
         _rlist[0].endtime = rec["endtime"]
-        if 'name' in rec:
+        if "name" in rec:
             _rlist[0].name = rec["name"]
         self.log.debug("DB:: Update: data AFTER %s" % _rlist[0])
 
@@ -150,34 +154,34 @@ class RecDB:
         return query.all()
 
     def _query_ongoing(self, query=None):
-        '''
+        """
         Not terminated AND recent.
 
         The meaning is "a query that makes sense to stop"
-        '''
-        delta = timedelta(seconds=get_config()['FORGE_MAX_DURATION'])
+        """
+        delta = timedelta(seconds=get_config()["FORGE_MAX_DURATION"])
         return self._query_newer(delta, self._query_not_saved(query))
 
     def _query_not_saved(self, query=None):
-        '''Still not saved'''
+        """Still not saved"""
         if query is None:
             query = self.get_session().query(Rec)
         return query.filter(Rec.filename == None)
 
     def _query_saved(self, query=None):
-        '''Still not saved'''
+        """Still not saved"""
         if query is None:
             query = self.get_session().query(Rec)
         return query.filter(Rec.filename != None)
 
     def _query_newer(self, delta, query=None):
-        '''Get Rec older than delta seconds'''
+        """Get Rec older than delta seconds"""
         if query is None:
             query = self.get_session().query(Rec)
         return query.filter(Rec.starttime > datetime.now() - delta)
 
     def _query_older(self, delta, query=None):
-        '''Get Rec older than delta seconds'''
+        """Get Rec older than delta seconds"""
         if query is None:
             query = self.get_session().query(Rec)
         return query.filter(Rec.starttime < datetime.now() - delta)
@@ -187,15 +191,14 @@ class RecDB:
             page_size = int(page_size)
             query = query.limit(page_size)
         if page:
-            query = query.offset(page*page_size)
+            query = query.offset(page * page_size)
         return query
 
-    def _query_generic(self, query, _id=None, name=None, starttime=None,
-                       endtime=None):
+    def _query_generic(self, query, _id=None, name=None, starttime=None, endtime=None):
         if _id is not None:
             query = query.filter_by(id=_id)
         if name is not None:
-            query = query.filter(Rec.name.like("%"+name+"%"))
+            query = query.filter(Rec.name.like("%" + name + "%"))
         if starttime is not None:
             _st = starttime
             query = query.filter(Rec.starttime > _st)
@@ -204,15 +207,22 @@ class RecDB:
             query = query.filter(Rec.endtime < _et)
         return query
 
-    def _search(self, _id=None, name=None, starttime=None,
-                endtime=None, page=0, page_size=PAGESIZE):
+    def _search(
+        self,
+        _id=None,
+        name=None,
+        starttime=None,
+        endtime=None,
+        page=0,
+        page_size=PAGESIZE,
+    ):
         self.log.debug(
-            "DB: Search => id:%s name:%s starttime:%s endtime=%s" %
-            (_id, name, starttime, endtime))
+            "DB: Search => id:%s name:%s starttime:%s endtime=%s"
+            % (_id, name, starttime, endtime)
+        )
 
         query = self.get_session().query(Rec)
-        query = self._query_generic(query, _id, name, starttime,
-                                    endtime)
+        query = self._query_generic(query, _id, name, starttime, endtime)
         query = self._query_page(query, page, page_size)
         self.log.debug("Searching: %s" % str(query))
         ret = query.all()
@@ -226,6 +236,7 @@ class RecDB:
 
 
 if __name__ == "__main__":
+
     def printall(queryres):
         for record in queryres:
             print("Record: %s" % record)
@@ -245,12 +256,11 @@ if __name__ == "__main__":
     print("Mimmo ")
     printall(db._search(name="Mimmo1"))
     print("Search")
-    printall(db._search(name="Mimmo1",
-                        starttime=datetime(2014, 5, 24, 15, 16, 1) ))
+    printall(db._search(name="Mimmo1", starttime=datetime(2014, 5, 24, 15, 16, 1)))
     a = db.get_by_id(5)
     a.start()
     db.delete(1)
     db.delete(2)
     db.delete(4)
     db.delete(1)
-    printall( db._search() )
+    printall(db._search())
