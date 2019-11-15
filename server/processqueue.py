@@ -40,11 +40,11 @@ class JobQueue(object):
 
 def simulate_long_job(recid=None, starttime=None, endtime=None, name='', filename=None):
     from time import sleep
-    print "evviva " + name
+    print("evviva " + name)
     sleep(2)
-    print "lavoro su " + name
+    print("lavoro su " + name)
     sleep(2)
-    print "done su " + name
+    print("done su " + name)
 _queue = None
 
 
@@ -60,15 +60,15 @@ if __name__ == '__main__':
 
     def sleep(n):
         import time
-        print "Inizio %d" % n
+        print("Inizio %d" % n)
         time.sleep(n)
-        print "Finisco %d" % n
+        print("Finisco %d" % n)
         return n
 
     get_process_queue().submit(sleep, 3)
     get_process_queue().submit(sleep, 3)
     get_process_queue().join()
-    print get_process_queue().jobs
+    print(get_process_queue().jobs)
     delta = (datetime.now() - n).total_seconds()
-    print delta
+    print(delta)
     assert 5 < delta < 7

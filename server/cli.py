@@ -9,10 +9,10 @@ logger = logging.getLogger('cli')
 
 CWD = os.getcwd()
 
-import forge
-import maint
-from config_manager import get_config
-import server
+from . import forge
+from . import maint
+from .config_manager import get_config
+from . import server
 
 
 def pre_check_permissions():
@@ -84,6 +84,7 @@ def common_pre():
 def main():
     parser = ArgumentParser(description='creates mp3 from live recordings')
     parser.add_argument('--verbose', '-v', action='count',
+                        default=0,
                         help='Increase verbosity; can be used multiple times')
     parser.add_argument('--pretend', '-p', action='store_true', default=False,
                         help='Only pretend; no real action will be done')
