@@ -82,7 +82,7 @@ $.widget("ror.ongoingrec", {
 		);
 		this._update();
 
-		view.on("change", "input", function(evt) {
+		view.on("change keydown paste input", "input", function(evt) {
 			console.log('change', evt);
 			var prevrec = widget.options.rec;
 			prevrec.name = $(evt.target).val();
