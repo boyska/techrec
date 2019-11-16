@@ -1,4 +1,4 @@
-/* global $, poll_job */
+/* global $, poll_job, error_dialog */
 
 var form = {
   MAX_MINS: 5 * 60, // 5 hours
@@ -20,7 +20,7 @@ var form = {
     'use strict'
     var errs = []
     function err (msg, element) {
-      errs.unshift({ msg: msg, el: element})
+      errs.unshift({msg: msg, el: element})
     }
     var v = form.get_values()
     if (v.name === '') {

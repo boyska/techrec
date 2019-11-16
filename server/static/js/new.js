@@ -1,4 +1,4 @@
-/* global $, config, RecAPI, poll_job, _ */
+/* global $, _, config, RecAPI, poll_job, time_changer_dialog */
 
 // TODO: move to a separate file(?)
 $.widget('ror.countclock', {
@@ -97,14 +97,17 @@ $.widget('ror.ongoingrec', {
     })
     view.on('click', '.rec-failed', function (evt) {
       $('<div/>').html($('<pre/>').text(widget.options.errormsg))
-      .dialog({modal: true, title: 'Dettaglio errori',
+      .dialog({
+        modal: true,
+        title: 'Dettaglio errori',
         buttons: {
           Retry: function () {
             console.log('retrying')
             widget._setOption('state', 0)
             widget._trigger('retry', evt, {rec: rec, widget: widget})
             $(this).dialog('close')
-          }, Cancel: function () {
+          },
+          Cancel: function () {
             $(this).dialog('close')
           }
         }
@@ -130,10 +133,11 @@ $.widget('ror.ongoingrec', {
     var rec = this.options.rec
     this.element.find('input').val(rec.name)
     this.element.find(':ror-countclock').countclock('option', 'since',
-              rec.starttime !== null ? config.date_read(rec.starttime) :
-              null).on('countclockchange',
+              rec.starttime !== null
+      ? config.date_read(rec.starttime)
+      : null).on('countclockchange',
               function (evt, data) {
-                count_widg = this
+                var count_widg = this
                 console.log(this)
                 console.log(rec.starttime, data.since.getTime() / 1000)
                 rec.starttime = data.since.getTime() / 1000
@@ -183,7 +187,6 @@ function add_new_rec () {
   // progress()
   return RecAPI.create()
   .done(function (res) {
-    /* global show_ongoing */
     // passa alla seconda schermata
     $('#rec-inizia').remove()
     $('#rec-normal').show()
@@ -253,7 +256,6 @@ function show_ongoing (ongoing_recs) {
 
 $(function () {
   'use strict'
-  /* global getKeys */
   // TODO: get-ongoing
   RecAPI.get_ongoing()
   .done(function (recs) {
