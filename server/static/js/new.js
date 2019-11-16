@@ -1,4 +1,4 @@
-/*global $, config, RecAPI, poll_job*/
+/*global $, config, RecAPI, poll_job, _*/
 
 //TODO: move to a separate file(?)
 $.widget("ror.countclock", {
@@ -82,7 +82,8 @@ $.widget("ror.ongoingrec", {
 		);
 		this._update();
 
-		view.on("change keydown paste input", "input", function(evt) {
+		view.on("change keydown paste input", "input",
+			_.debounce(function onNameChanged(evt) {
 			console.log('change', evt);
 			var prevrec = widget.options.rec;
 			prevrec.name = $(evt.target).val();
@@ -90,7 +91,7 @@ $.widget("ror.ongoingrec", {
 			widget._trigger("change", evt,
 											{rec: rec, widget: widget, changed: {name: rec.name}}
 										 );
-		});
+		}, 500));
 		view.on("click", ".rec-stop", function(evt) {
 			widget._trigger("stop", evt, {rec: rec, widget: widget});
 		});
