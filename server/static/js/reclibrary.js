@@ -1,3 +1,5 @@
+/* global $ */
+
 console.log('Loading...')
 
 function trx_startbut (code) { return 'startbutton-' + code }

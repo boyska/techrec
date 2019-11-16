@@ -1,13 +1,13 @@
 /* global $ */
 function time_changer_dialog (d, changed_callback) {
   // d is a Date object
-  var dlg_html = '<div> \
-                 <form action="#"> \
-                 <input name="h" size="2" maxlength="2" type="number" min="0" max="23"> \
-                 <input name="m" size="2" maxlength="2" type="number" min="0" max="59"> \
-                 <input name="s" size="2" maxlength="2" type="number" min="0" max="59"> \
-                 </form> \
-                 </div>'
+  var dlg_html = '<div>' +
+                 '<form action="#"> ' +
+                 '<input name="h" size="2" maxlength="2" type="number" min="0" max="23"> ' +
+                 '<input name="m" size="2" maxlength="2" type="number" min="0" max="59"> ' +
+                 '<input name="s" size="2" maxlength="2" type="number" min="0" max="59"> ' +
+                 '</form> ' +
+                 '</div>'
 
   var $dlg = $($.parseHTML(dlg_html))
   $('[name=h]', $dlg).val(d.getHours())
@@ -22,7 +22,7 @@ function time_changer_dialog (d, changed_callback) {
         if (changed_callback === undefined) {
           return
         }
-        newd = new Date(d.getTime())
+        var newd = new Date(d.getTime())
         newd.setHours($('[name=h]', $dlg).val())
         newd.setMinutes($('[name=m]', $dlg).val())
         newd.setSeconds($('[name=s]', $dlg).val())
@@ -49,11 +49,10 @@ $.widget('ror.thebutton', {
     'use strict'
     // create an appropriate button
     var widget = this
-    var state = this.options.rec
+    // var state = this.options.rec
     widget.element.addClass('pure-button')
 
     widget.element.on('click', function (evt) {
-      /* global error_dialog */
       if (widget.element.hasClass('rec-failed')) {
         error_dialog(widget.options.errormsg,
                      function () {
@@ -113,7 +112,9 @@ $.widget('ror.thebutton', {
 
 function error_dialog (msg, retry, cancel) {
   $('<div/>').html($('<pre/>').text(msg))
-  .dialog({modal: true, title: 'Dettaglio errori',
+  .dialog({
+    modal: true,
+    title: 'Dettaglio errori',
     buttons: {
       Retry: retry,
       Cancel: cancel
