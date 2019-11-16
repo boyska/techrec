@@ -1,7 +1,7 @@
 TechRec
 =======
 
-A Python2 web application that assist radio speakers in recording their shows.
+A Python2/Python3 web application that assist radio speakers in recording their shows.
 Meant to be simple to install and to maintain.
 
 It basically takes a directory with the continuous recording and create new
@@ -10,9 +10,9 @@ files "cutting/pasting" with ffmpeg.
 Features
 =========
 
-* little system dependencies: python2 and ffmpeg
+* little system dependencies: python and ffmpeg
 * The interface is extremely simple to use
-* You can have nested recording (ie: to record an interview inside of a whole
+* Supports nested recording (ie: to record an interview inside of a whole
   show)
 * There is no user system: any user opening the website will see the complete
   status of the applications. There is, also, nothing stored in cookie or
@@ -52,3 +52,9 @@ testing
 -----------
 
 unit tests can be run with `python setup.py test`
+
+screenshots
+--------------
+
+See screenshots at
+[https://boyska.degenerazione.xyz/proj/techrec/](https://boyska.degenerazione.xyz/proj/techrec/)
