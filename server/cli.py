@@ -1,4 +1,5 @@
 import os
+import os.path
 import sys
 from argparse import ArgumentParser, Action
 from datetime import datetime
@@ -74,7 +75,10 @@ def common_pre():
                 logger.warn("Configuration file '%s' does not exist; skipping" % path)
                 continue
             configs.append(path)
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    if getattr(sys, 'frozen', False):
+        os.chdir(sys._MEIPASS)
+    else:
+        os.chdir(os.path.dirname(os.path.realpath(__file__)))
     for conf in configs:
         get_config().from_pyfile(conf)
 

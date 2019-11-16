@@ -1,4 +1,6 @@
 import logging
+import os.path
+import sys
 
 HOST = "localhost"
 PORT = "8000"
@@ -28,13 +30,18 @@ TAG_EXTRA = {}
 # LICENSE URI is special because date need to be added
 TAG_LICENSE_URI = None
 
+# defaults
 STATIC_FILES = "static/"
 STATIC_PAGES = "pages/"
-try:
-    from pkg_resources import resource_filename, resource_isdir
+if getattr(sys, 'frozen', False):  # pyinstaller
+    STATIC_FILES = os.path.join(sys._MEIPASS, STATIC_FILES)
+    STATIC_PAGES = os.path.join(sys._MEIPASS, STATIC_PAGES)
+else:
+    try:
+        from pkg_resources import resource_filename, resource_isdir
 
-    if resource_isdir("techrec", "pages"):
-        STATIC_PAGES = resource_filename("techrec", "pages")
-        STATIC_FILES = resource_filename("techrec", "static")
-except ImportError:
-    logging.exception("Error loading resources from installed part")
+        if resource_isdir("techrec", "pages"):
+            STATIC_PAGES = resource_filename("techrec", "pages")
+            STATIC_FILES = resource_filename("techrec", "static")
+    except ImportError:
+        logging.exception("Error loading resources from installed part")
